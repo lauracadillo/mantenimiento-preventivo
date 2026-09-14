@@ -94,12 +94,13 @@ function mostrarTabla(datos) {
 
 function aplicarFiltro() {
     const mesFiltro = document.getElementById('filtroMes').value;
-    const contador = document.getElementById('contadorFilas');
+
+    console.log("Total datos recibidos:", todosLosDatos.length);
+    console.log("Filtro seleccionado:", mesFiltro);
 
     if (!mesFiltro) {
+        console.log("Mostrando todos:", todosLosDatos.length);
         mostrarTabla(todosLosDatos);
-
-        contador.textContent = `Mostrando ${todosLosDatos.length} filas`;
         return;
     }
 
@@ -111,17 +112,19 @@ function aplicarFiltro() {
                Number(mes) === Number(mesFiltro);
     });
 
+    console.log("Filas encontradas:", datosFiltrados.length);
+    console.log("Datos filtrados:", datosFiltrados);
+
     if (datosFiltrados.length === 0) {
         document.getElementById('tabla').style.display = 'none';
         document.getElementById('error').innerHTML =
             `<div class="error">⚠️ No hay mantenimientos programados para el mes ${mesFiltro}</div>`;
-
-        contador.textContent = 'Mostrando 0 filas';
     } else {
         mostrarTabla(datosFiltrados);
-
-        contador.textContent = `Mostrando ${datosFiltrados.length} filas`;
     }
+
+    document.getElementById('contadorFilas').textContent =
+        `Mostrando ${datosFiltrados.length} filas`;
 }
 
 
