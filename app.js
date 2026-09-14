@@ -203,7 +203,8 @@ function cargarArchivo(event) {
             });
 
             // Tomar la primera hoja
-            const hoja = HojaArchivoMPautin;
+            // const nombreHoja = workbook.SheetNames[0];
+            const hoja = workbook.Sheets[HojaArchivoMPautin];
 
             // Convertir a array de objetos
             datosArchivoExterno = XLSX.utils.sheet_to_json(hoja, {
@@ -235,5 +236,152 @@ function cargarArchivo(event) {
 
 
 
+// ============================================================
+// LOGIN
+// ============================================================
+
+function iniciarSesion() {
+
+    const usuario =
+        document.getElementById("usuario").value.trim();
+
+    const password =
+        document.getElementById("password").value.trim();
+
+    const error =
+        document.getElementById("loginError");
+
+
+    // LOGIN TEMPORAL
+    // --------------------------------------------------------
+    // Cambia estos valores posteriormente por Supabase
+
+    const usuarioCorrecto = "admin";
+    const passwordCorrecto = "1234";
+
+
+    if (
+        usuario === usuarioCorrecto &&
+        password === passwordCorrecto
+    ) {
+
+        error.textContent = "";
+
+        document.getElementById("usuarioLogueado")
+            .textContent = usuario;
+
+        mostrarPagina("mainPage");
+
+    } else {
+
+        error.textContent =
+            "Usuario o contraseña incorrectos.";
+
+    }
+}
+
+
+// ============================================================
+// CERRAR SESIÓN
+// ============================================================
+
+function cerrarSesion() {
+
+    document.getElementById("usuario").value = "";
+
+    document.getElementById("password").value = "";
+
+    document.getElementById("loginError").textContent = "";
+
+    mostrarPagina("loginPage");
+}
+
+
+// ============================================================
+// ABRIR MÓDULO
+// ============================================================
+
+function abrirModulo(modulo) {
+
+    switch (modulo) {
+
+        case "certificacion":
+
+            mostrarPagina("certificacionPage");
+
+            break;
+
+
+        case "verificacion":
+
+            mostrarPagina("verificacionPage");
+
+            break;
+
+
+        case "reprogramacion":
+
+            mostrarPagina("reprogramacionPage");
+
+            break;
+
+    }
+
+}
+
+
+// ============================================================
+// VOLVER AL MENÚ
+// ============================================================
+
+function volverMenu() {
+
+    mostrarPagina("mainPage");
+
+}
+
+
+// ============================================================
+// MOSTRAR PÁGINA
+// ============================================================
+
+function mostrarPagina(idPagina) {
+
+    const paginas =
+        document.querySelectorAll(".page");
+
+    paginas.forEach(pagina => {
+
+        pagina.classList.add("hidden");
+
+    });
+
+
+    const pagina =
+        document.getElementById(idPagina);
+
+    if (pagina) {
+
+        pagina.classList.remove("hidden");
+
+    }
+
+}
+
+
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        // Mostrar login al iniciar
+
+        mostrarPagina("loginPage");
+        cargarDatos();
+
+    }
+);
+
+
+
 // Ejecutar al cargar
-cargarDatos()
