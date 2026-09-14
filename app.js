@@ -354,6 +354,31 @@ function cargarArchivo(event, nombreArchivo, nombreHoja) {
 
 
 
+function actualizarEstadoArchivos() {
+
+    const estado =
+        document.getElementById('estadoArchivo');
+
+    estado.innerHTML = '';
+
+    Object.entries(datosArchivos).forEach(
+        ([nombre, datos]) => {
+
+            if (datos.length > 0) {
+
+                const div =
+                    document.createElement('div');
+
+                div.innerHTML =
+                    `✅ <strong>${nombre}</strong>: 
+                     ${datos.length} filas`;
+
+                estado.appendChild(div);
+            }
+        }
+    );
+}
+
 // ============================================================
 // LOGIN
 // ============================================================
