@@ -3,7 +3,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_OjWWKzcoEuR9rwhCQyiRcA_3gsKbRpA'
 const TablaPlan2026 = 'Plan2026' // Cambia al nombre de tu tabla
 const COLUMNA_MES = 'mes a ejecutar' 
 const COLUMNAS_MOSTRAR = ['Site Id', 'Site Name', 'TipoN', "mes a ejecutar"] 
-
+const HojaArchivoMPautin = 'Data Preventivo'
 // Variable global para guardar todos los datos
 let DatosPlan2026 = []
 let datosAutin = []
@@ -203,8 +203,7 @@ function cargarArchivo(event) {
             });
 
             // Tomar la primera hoja
-            const nombreHoja = workbook.SheetNames[0];
-            const hoja = workbook.Sheets[nombreHoja];
+            const hoja = HojaArchivoMPautin;
 
             // Convertir a array de objetos
             datosArchivoExterno = XLSX.utils.sheet_to_json(hoja, {
@@ -232,8 +231,6 @@ function cargarArchivo(event) {
 
     reader.readAsArrayBuffer(archivo);
 }
-
-
 
 
 
