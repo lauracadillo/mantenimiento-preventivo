@@ -1,0 +1,4 @@
+const SUPABASE_URL = 'https://ugayglaqrwccynrikxvp.supabase.co'
+const SUPABASE_ANON_KEY = 'sb_publishable_OjWWKzcoEuR9rwhCQyiRcA_3gsKbRpA'
+const TABLA_NOMBRE = 'Base de Sitios' // Cambia al nombre de tu tabla
+        
