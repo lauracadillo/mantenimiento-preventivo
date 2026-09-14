@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Sistema de Mantenimiento</title>
+    <title>Gestión Mantenimiento Preventivo</title>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
@@ -23,44 +23,21 @@
 
         <div class="login-card">
 
-            <div class="login-logo">
-                ⚙️
-            </div>
+            <div class="login-logo">  </div>
 
-            <h1>Sistema de Mantenimiento</h1>
+            <h1>Gestión de Mantenimiento Preventivo</h1>
 
-            <p class="login-subtitle">
-                Ingresa tus credenciales para continuar
-            </p>
+            <p class="login-subtitle">Ingresar credenciales para continuar </p>
 
             <div class="form-group">
                 <label for="usuario">Usuario</label>
-
-                <input
-                    type="text"
-                    id="usuario"
-                    placeholder="Ingresa tu usuario"
-                    autocomplete="username"
-                >
+                <input type="text" id="usuario" placeholder="Ingresa tu usuario" autocomplete="username">
             </div>
-
             <div class="form-group">
                 <label for="password">Contraseña</label>
-
-                <input
-                    type="password"
-                    id="password"
-                    placeholder="Ingresa tu contraseña"
-                    autocomplete="current-password"
-                >
+                <input type="password" id="password" placeholder="Ingresa tu contraseña" autocomplete="current-password">
             </div>
-
-            <button
-                class="btn-login"
-                onclick="iniciarSesion()"
-            >
-                Ingresar
-            </button>
+            <button class="btn-login"  onclick="iniciarSesion()">Ingresar</button>
 
             <div id="loginError" class="login-error"></div>
 
@@ -75,153 +52,63 @@
 
     <section id="mainPage" class="page hidden">
 
+      <!-- header !!!!!!! -->
         <header class="topbar">
-
             <div class="topbar-title">
-                <span class="topbar-icon">⚙️</span>
+                <span class="topbar-icon"></span>
 
                 <div>
-                    <h2>Sistema de Mantenimiento</h2>
-
-                    <span>
-                        Panel principal
-                    </span>
+                    <h2>Gestión de mantenimiento preventivo</h2>
+                    <span> TITULO</span>
                 </div>
             </div>
-
             <div class="topbar-user">
-
-                <span id="usuarioLogueado">
-                    Usuario
-                </span>
-
-                <button
-                    class="btn-logout"
-                    onclick="cerrarSesion()"
-                >
-                    Cerrar sesión
-                </button>
-
+                <span id="usuarioLogueado"> Usuario </span>
+                <button class="btn-logout" onclick="cerrarSesion()" > Cerrar sesión </button>
             </div>
-
         </header>
 
 
         <main class="main-content">
-
             <div class="welcome">
-
                 <h1>Bienvenido</h1>
-
-                <p>
-                    Selecciona el módulo que deseas utilizar.
-                </p>
-
+                <p> Seleccionar la herramienta que se desee utilizar.</p>
             </div>
-
 
             <div class="modules-grid">
 
-
-                <!-- CERTIFICACIÓN FLM -->
-
-                <div
-                    class="module-card"
-                    onclick="abrirModulo('certificacion')"
-                >
-
-                    <div class="module-icon certification">
-                        ✓
-                    </div>
-
+               <!-- MODULO : CERTIFICACIÓN FLM -->
+                <div  class="module-card"  onclick="abrirModulo('certificacion')">
+                    <div class="module-icon certification">  ✓ </div>
                     <div class="module-content">
-
-                        <h2>
-                            Certificación FLM
-                        </h2>
-
-                        <p>
-                            Gestión y validación de certificaciones
-                            FLM.
-                        </p>
-
+                        <h2> Certificación mensual FLM </h2>
+                        <p>  Gestión y validación de certificaciones FLM.</p>
                     </div>
-
-                    <div class="module-arrow">
-                        →
-                    </div>
-
+                    <div class="module-arrow"> →</div>
                 </div>
 
-
-                <!-- VERIFICACIÓN MENSUAL -->
-
-                <div
-                    class="module-card"
-                    onclick="abrirModulo('verificacion')"
-                >
-
-                    <div class="module-icon verification">
-                        📊
-                    </div>
-
+                <!-- MODULO: VERIFICACIÓN MENSUAL -->
+                <div class="module-card" onclick="abrirModulo('verificacion')">
+                    <div class="module-icon verification"> 📊 </div>
                     <div class="module-content">
-
-                        <h2>
-                            Verificación mensual
-                        </h2>
-
-                        <p>
-                            Consulta y verifica el plan de
-                            mantenimiento mensual.
-                        </p>
-
+                        <h2> Verificación mensual </h2>
+                        <p> Consulta y verifica el plan de mantenimiento mensual.</p>
                     </div>
-
-                    <div class="module-arrow">
-                        →
-                    </div>
-
+                    <div class="module-arrow"> → </div>
                 </div>
-
 
                 <!-- REPROGRAMACIÓN -->
-
-                <div
-                    class="module-card"
-                    onclick="abrirModulo('reprogramacion')"
-                >
-
-                    <div class="module-icon reschedule">
-                        📅
-                    </div>
-
+                <div class="module-card" onclick="abrirModulo('reprogramacion')" >
+                    <div class="module-icon reschedule"> 📅 </div>
                     <div class="module-content">
-
-                        <h2>
-                            Reprogramación
-                        </h2>
-
-                        <p>
-                            Gestión de actividades pendientes
-                            y reprogramaciones.
-                        </p>
-
+                        <h2>Reprogramación</h2>
+                        <p> Gestión de reprogramación de mantenimientos. </p>
                     </div>
-
-                    <div class="module-arrow">
-                        →
-                    </div>
-
+                    <div class="module-arrow"> → </div>
                 </div>
-
-
             </div>
-
         </main>
-
     </section>
-
 
     <!-- =====================================================
          CERTIFICACIÓN FLM
@@ -230,46 +117,18 @@
     <section id="certificacionPage" class="page hidden">
 
         <header class="module-header">
-
-            <button
-                class="btn-back"
-                onclick="volverMenu()"
-            >
-                ← Volver al menú
-            </button>
-
-            <h1>
-                Certificación FLM
-            </h1>
-
-            <button
-                class="btn-logout"
-                onclick="cerrarSesion()"
-            >
-                Cerrar sesión
-            </button>
-
+            <button class="btn-back" onclick="volverMenu()" > Volver al menú </button>
+            <h1> Certificación FLM </h1>
+            <button class="btn-logout" onclick="cerrarSesion()"> Cerrar sesión </button>
         </header>
 
-
         <main class="empty-module">
-
-            <div class="empty-icon">
-                ✓
-            </div>
-
-            <h2>
-                Módulo de Certificación FLM
-            </h2>
-
-            <p>
-                Este módulo estará disponible próximamente.
-            </p>
-
+            <div class="empty-icon"> ✓ </div>
+            <h2> Módulo de Certificación FLM</h2>
+            <p>Este módulo estará disponible próximamente.</p>
         </main>
 
     </section>
-
 
     <!-- =====================================================
          VERIFICACIÓN MENSUAL
@@ -278,200 +137,72 @@
     <section id="verificacionPage" class="page hidden">
 
         <header class="module-header">
-
-            <button
-                class="btn-back"
-                onclick="volverMenu()"
-            >
-                ← Volver al menú
-            </button>
-
+            <button class="btn-back" onclick="volverMenu()"> Volver al menú </button>
             <div>
-
-                <h1>
-                    Verificación mensual
-                </h1>
-
-                <span>
-                    Plan de mantenimiento mensual
-                </span>
-
+                <h1> Verificación mensual </h1>
+                <span> Plan de mantenimiento mensual </span>
             </div>
-
-            <button
-                class="btn-logout"
-                onclick="cerrarSesion()"
-            >
-                Cerrar sesión
-            </button>
-
+            <button class="btn-logout"  onclick="cerrarSesion()"> Cerrar sesión </button>
         </header>
 
-
         <main class="verification-container">
-
 
             <!-- CARGAR ARCHIVO -->
 
             <div class="file-upload-card">
-
                 <div>
-
-                    <h3>
-                        📁 Archivo MP Autin
-                    </h3>
-
-                    <p>
-                        Carga el archivo Excel para realizar
-                        el cruce de información.
-                    </p>
-
+                    <h3> Archivo MP Autin </h3>
+                    <p> Carga el archivo Excel para realizar ol cruce de información.</p>
                 </div>
-
-                <input
-                    type="file"
-                    id="archivoMPautin"
-                    accept=".xlsx"
-                >
-
-                <div
-                    id="estadoArchivo"
-                    class="file-status"
-                ></div>
-
+                <input type="file" id="archivoMPautin"  accept=".xlsx" >
+                <div id="estadoArchivo" class="file-status"></div>
+              </div>
             </div>
-
 
             <!-- FILTROS -->
 
             <div class="filter-card">
-
-                <label for="filtroMes">
-                    Filtrar por mes:
-                </label>
-
+                <label for="filtroMes"> Filtrar por mes:</label>
                 <select id="filtroMes">
-
-                    <option value="">
-                        -- Todos los meses --
-                    </option>
-
-                    <option value="1">
-                        Enero
-                    </option>
-
-                    <option value="2">
-                        Febrero
-                    </option>
-
-                    <option value="3">
-                        Marzo
-                    </option>
-
-                    <option value="4">
-                        Abril
-                    </option>
-
-                    <option value="5">
-                        Mayo
-                    </option>
-
-                    <option value="6">
-                        Junio
-                    </option>
-
-                    <option value="7">
-                        Julio
-                    </option>
-
-                    <option value="8">
-                        Agosto
-                    </option>
-
-                    <option value="9">
-                        Septiembre
-                    </option>
-
-                    <option value="10">
-                        Octubre
-                    </option>
-
-                    <option value="11">
-                        Noviembre
-                    </option>
-
-                    <option value="12">
-                        Diciembre
-                    </option>
-
+                    <option value="">-- Todos los meses -- </option>
+                    <option value="1"> Enero </option>
+                    <option value="2"> Febrero </option>
+                    <option value="3"> Marzo</option>
+                    <option value="4"> Abril</option>
+                    <option value="5"> Mayo </option>
+                    <option value="6"> Junio </option>
+                    <option value="7"> Julio </option>
+                    <option value="8"> Agosto </option>
+                    <option value="9"> Septiembre </option>
+                    <option value="10"> Octubre </option>
+                    <option value="11"> Noviembre </option>
+                    <option value="12"> Diciembre </option>
                 </select>
 
-
-                <button
-                    class="btn-primary"
-                    onclick="aplicarFiltro()"
-                >
-                    🔍 Filtrar
-                </button>
-
-
-                <button
-                    class="btn-secondary"
-                    onclick="limpiarFiltro()"
-                >
-                    ✕ Limpiar
-                </button>
+                <button class="btn-primary"  onclick="aplicarFiltro()" >Filtrar</button>
+                <button class="btn-secondary" onclick="limpiarFiltro()" > Limpiar</button>
 
             </div>
-
 
             <!-- ESTADO -->
 
-            <div
-                id="loading"
-                class="loading"
-            >
-                Cargando datos...
-            </div>
+            <div id="loading" class="loading"> Cargando datos...</div>
+            <div id="error"  class="error"> Error al cargar los datos!</div>
 
+            <div id="contadorFilas" class="counter"></div>
 
-            <div
-                id="error"
-                class="error"
-            ></div>
-
-
-            <div
-                id="contadorFilas"
-                class="counter"
-            ></div>
-
-
-            <!-- TABLA -->
+            <!-- TABLA DE DATOS -->
 
             <div class="table-container">
-
-                <table
-                    id="tabla"
-                    style="display: none;"
-                >
-
+                <table id="tabla"  style="display: none;">
                     <thead>
-
                         <tr id="encabezados"></tr>
-
                     </thead>
-
                     <tbody id="datos"></tbody>
-
                 </table>
-
             </div>
-
         </main>
-
     </section>
-
 
     <!-- =====================================================
          REPROGRAMACIÓN
@@ -480,44 +211,16 @@
     <section id="reprogramacionPage" class="page hidden">
 
         <header class="module-header">
-
-            <button
-                class="btn-back"
-                onclick="volverMenu()"
-            >
-                ← Volver al menú
-            </button>
-
-            <h1>
-                Reprogramación
-            </h1>
-
-            <button
-                class="btn-logout"
-                onclick="cerrarSesion()"
-            >
-                Cerrar sesión
-            </button>
-
+            <button class="btn-back" onclick="volverMenu()"> Volver al menú </button>
+            <h1> Reprogramación </h1>
+            <button  class="btn-logout"   onclick="cerrarSesion()">  Cerrar sesión </button>
         </header>
 
-
         <main class="empty-module">
-
-            <div class="empty-icon">
-                📅
-            </div>
-
-            <h2>
-                Módulo de Reprogramación
-            </h2>
-
-            <p>
-                Este módulo estará disponible próximamente.
-            </p>
-
+            <div class="empty-icon"> 📅 </div>
+            <h2> Módulo de Reprogramación </h2>
+            <p>  Este módulo estará disponible próximamente. </p>
         </main>
-
     </section>
 
 
