@@ -197,27 +197,33 @@
         }
 
         // Aplicar filtro por mes
+        
         function aplicarFiltro() {
-            const mesFiltro = document.getElementById('filtroMes').value
+            const mesFiltro = document.getElementById('filtroMes').value;
 
             if (!mesFiltro) {
-                mostrarTabla(todosLosDatos)
-                return
+                mostrarTabla(todosLosDatos);
+                return;
             }
 
-            const datosFiltrados = todosLosDatos.filter(fila => 
-                fila[COLUMNA_MES] && 
-                fila[COLUMNA_MES].toString().toLowerCase().includes(mesFiltro.toLowerCase())
-            )
+            const datosFiltrados = todosLosDatos.filter(fila => {
+                const mes = fila[COLUMNA_MES];
+
+                return mes !== null &&
+                      mes !== undefined &&
+                      Number(mes) === Number(mesFiltro);
+            });
 
             if (datosFiltrados.length === 0) {
-                document.getElementById('tabla').style.display = 'none'
-                document.getElementById('error').innerHTML = 
-                    `<div class="error">⚠️ No hay mantenimientos programados para ${mesFiltro}</div>`
+                document.getElementById('tabla').style.display = 'none';
+                document.getElementById('error').innerHTML =
+                    `<div class="error">⚠️ No hay mantenimientos programados para el mes ${mesFiltro}</div>`;
             } else {
-                mostrarTabla(datosFiltrados)
+                mostrarTabla(datosFiltrados);
             }
         }
+
+
 
         // Limpiar filtro
         function limpiarFiltro() {
