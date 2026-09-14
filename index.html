@@ -1,94 +1,141 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Certificación de Especialidades</title>
-  <link rel="stylesheet" href="styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mantenimiento Preventivo</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th {
+            background: #007bff;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        tr:hover {
+            background: #f9f9f9;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+    </style>
 </head>
 <body>
-  <main class="container">
-    <header>
-      <div>
-        <h1>Certificación de Especialidades</h1>
-        <p>Procesamiento local de archivos Excel — no se cargan a ningún servidor.</p>
-      </div>
-      <span class="badge">100% navegador</span>
-    </header>
+    <div class="container">
+        <h1>📋 Mantenimiento Preventivo</h1>
+        <div id="loading" class="loading">Cargando datos...</div>
+        <div id="error"></div>
+        <table id="tabla" style="display: none;">
+            <thead>
+                <tr id="encabezados"></tr>
+            </thead>
+            <tbody id="datos"></tbody>
+        </table>
+    </div>
 
-    <section class="card">
-      <h2>1. Archivos de entrada</h2>
+    <script>
+        // 👇 REEMPLAZA ESTOS VALORES CON LOS TUYOS
+        const SUPABASE_URL = 'https://ugayglaqrwccynrikxvp.supabase.co'
+        const SUPABASE_ANON_KEY = 'sb_publishable_OjWWKzcoEuR9rwhCQyiRcA_3gsKbRpA'
+        const TABLA_NOMBRE = 'Base de Sitios' // Cambia al nombre de tu tabla
+        
+        // Inicializar Supabase
+        const { createClient } = window.supabase
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-      <div class="file-grid">
-        <label class="file-box">
-          <span>Autin — Data Preventivo *</span>
-          <input id="archivoAutin" type="file" accept=".xlsx,.xls">
-          <small>Hoja: <b>Data Preventivo</b></small>
-        </label>
+        // Traer datos
+        async function cargarDatos() {
+            try {
+                const { data, error } = await supabase
+                    .from(TABLA_NOMBRE)
+                    .select('*')
 
-        <label class="file-box">
-          <span>Base de sitios *</span>
-          <input id="baseSitios" type="file" accept=".xlsx,.xls">
-          <small>Hoja: <b>Base de Sitios</b></small>
-        </label>
+                if (error) throw error
 
-        <label class="file-box">
-          <span>Cambio de tipos *</span>
-          <input id="cambioTipo" type="file" accept=".xlsx,.xls">
-          <small>Hoja: <b>Sitios</b></small>
-        </label>
+                if (!data || data.length === 0) {
+                    document.getElementById('loading').textContent = 'No hay datos'
+                    return
+                }
 
-        <label class="file-box optional">
-          <span>Seguimiento de apagados</span>
-          <input id="apagados" type="file" accept=".xlsx,.xls">
-          <small>Hoja: <b>apagados</b> · opcional</small>
-        </label>
-      </div>
-    </section>
+                mostrarTabla(data)
+            } catch (err) {
+                document.getElementById('error').innerHTML = 
+                    `<div class="error">❌ Error: ${err.message}</div>`
+                document.getElementById('loading').style.display = 'none'
+            }
+        }
 
-    <section class="card">
-      <h2>2. Parámetros</h2>
-      <div class="params">
-        <label>Año
-          <input id="anio" type="number" value="2026" min="2000" max="2100">
-        </label>
-        <label>Mes
-          <select id="mes">
-            <option value="1">Enero</option><option value="2">Febrero</option>
-            <option value="3">Marzo</option><option value="4">Abril</option>
-            <option value="5">Mayo</option><option value="6">Junio</option>
-            <option value="7">Julio</option><option value="8" selected>Agosto</option>
-            <option value="9">Septiembre</option><option value="10">Octubre</option>
-            <option value="11">Noviembre</option><option value="12">Diciembre</option>
-          </select>
-        </label>
-      </div>
-    </section>
+        // Mostrar tabla
+        function mostrarTabla(datos) {
+            document.getElementById('loading').style.display = 'none'
+            document.getElementById('tabla').style.display = 'table'
 
-    <section class="actions">
-      <button id="procesar" class="primary">Procesar y generar Excel</button>
-      <button id="limpiar" class="secondary">Limpiar</button>
-    </section>
+            // Encabezados
+            const columnas = Object.keys(datos[0])
+            const encabezados = document.getElementById('encabezados')
+            columnas.forEach(col => {
+                const th = document.createElement('th')
+                th.textContent = col
+                encabezados.appendChild(th)
+            })
 
-    <section id="estado" class="card status hidden"></section>
+            // Filas
+            const tbody = document.getElementById('datos')
+            datos.forEach(fila => {
+                const tr = document.createElement('tr')
+                columnas.forEach(col => {
+                    const td = document.createElement('td')
+                    td.textContent = fila[col] || '-'
+                    tr.appendChild(td)
+                })
+                tbody.appendChild(tr)
+            })
+        }
 
-    <section id="resumen" class="card hidden">
-      <h2>Resultado</h2>
-      <div id="metricas" class="metrics"></div>
-      <div class="download-row">
-        <button id="descargar" class="primary">Descargar Excel final</button>
-      </div>
-    </section>
-
-    <section id="preview" class="card hidden">
-      <h2>Vista previa — Comparación</h2>
-      <div class="table-wrap">
-        <table id="previewTable"></table>
-      </div>
-    </section>
-  </main>
-
-  <script src="app.js"></script>
+        // Ejecutar al cargar
+        cargarDatos()
+    </script>
 </body>
 </html>
