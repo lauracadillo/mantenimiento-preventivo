@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Certificación de Especialidades</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <main class="container">
+    <header>
+      <div>
+        <h1>Certificación de Especialidades</h1>
+        <p>Procesamiento local de archivos Excel — no se cargan a ningún servidor.</p>
+      </div>
+      <span class="badge">100% navegador</span>
+    </header>
+
+    <section class="card">
+      <h2>1. Archivos de entrada</h2>
+
+      <div class="file-grid">
+        <label class="file-box">
+          <span>Autin — Data Preventivo *</span>
+          <input id="archivoAutin" type="file" accept=".xlsx,.xls">
+          <small>Hoja: <b>Data Preventivo</b></small>
+        </label>
+
+        <label class="file-box">
+          <span>Base de sitios *</span>
+          <input id="baseSitios" type="file" accept=".xlsx,.xls">
+          <small>Hoja: <b>Base de Sitios</b></small>
+        </label>
+
+        <label class="file-box">
+          <span>Cambio de tipos *</span>
+          <input id="cambioTipo" type="file" accept=".xlsx,.xls">
+          <small>Hoja: <b>Sitios</b></small>
+        </label>
+
+        <label class="file-box optional">
+          <span>Seguimiento de apagados</span>
+          <input id="apagados" type="file" accept=".xlsx,.xls">
+          <small>Hoja: <b>apagados</b> · opcional</small>
+        </label>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>2. Parámetros</h2>
+      <div class="params">
+        <label>Año
+          <input id="anio" type="number" value="2026" min="2000" max="2100">
+        </label>
+        <label>Mes
+          <select id="mes">
+            <option value="1">Enero</option><option value="2">Febrero</option>
+            <option value="3">Marzo</option><option value="4">Abril</option>
+            <option value="5">Mayo</option><option value="6">Junio</option>
+            <option value="7">Julio</option><option value="8" selected>Agosto</option>
+            <option value="9">Septiembre</option><option value="10">Octubre</option>
+            <option value="11">Noviembre</option><option value="12">Diciembre</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section class="actions">
+      <button id="procesar" class="primary">Procesar y generar Excel</button>
+      <button id="limpiar" class="secondary">Limpiar</button>
+    </section>
+
+    <section id="estado" class="card status hidden"></section>
+
+    <section id="resumen" class="card hidden">
+      <h2>Resultado</h2>
+      <div id="metricas" class="metrics"></div>
+      <div class="download-row">
+        <button id="descargar" class="primary">Descargar Excel final</button>
+      </div>
+    </section>
+
+    <section id="preview" class="card hidden">
+      <h2>Vista previa — Comparación</h2>
+      <div class="table-wrap">
+        <table id="previewTable"></table>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
