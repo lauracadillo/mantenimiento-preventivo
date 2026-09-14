@@ -5,12 +5,15 @@ const COLUMNA_MES = 'mes a ejecutar'
 const COLUMNAS_MOSTRAR = ['Site Id', 'Site Name', 'TipoN', "mes a ejecutar"] 
 
 // Variable global para guardar todos los datos
-let todosLosDatos = []
+let DatosPlan2026 = []
+let datosAutin = []
+
+
+
+
 
 // Inicializar Supabase
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-
-// Traer datos
 
 async function cargarDatos() {
     try {
@@ -55,7 +58,7 @@ async function cargarDatos() {
         if (todosLosRegistros.length === 0) {
             document.getElementById('error').innerHTML =
                 `<div class="error">
-                    ⚠️ No hay datos en la tabla "${TablaPlan2026}"<br>
+                    No hay datos en la tabla "${TablaPlan2026}"<br>
                     Verifica:<br>
                     1. El nombre de la tabla es correcto<br>
                     2. La tabla tiene datos<br>
@@ -67,15 +70,15 @@ async function cargarDatos() {
         }
 
         // Guardar TODOS los datos
-        todosLosDatos = todosLosRegistros;
+        DatosPlan2026 = todosLosRegistros;
 
         // Mostrar todos los datos
-        mostrarTabla(todosLosDatos);
+        mostrarTabla(DatosPlan2026);
 
         // Actualizar contador
         const contador = document.getElementById('contadorFilas');
         if (contador) {
-            contador.textContent = `Mostrando ${todosLosDatos.length} filas`;
+            contador.textContent = `Mostrando ${DatosPlan2026.length} filas`;
         }
 
     } catch (err) {
@@ -103,7 +106,7 @@ function mostrarTabla(datos) {
     if (!datos || datos.length === 0) {
         document.getElementById('tabla').style.display = 'none'
         document.getElementById('error').innerHTML = 
-            `<div class="error">⚠️ No hay registros para mostrar</div>`
+            `<div class="error"> No hay registros para mostrar</div>`
         return
     }
 
@@ -137,16 +140,16 @@ function mostrarTabla(datos) {
 function aplicarFiltro() {
     const mesFiltro = document.getElementById('filtroMes').value;
 
-    console.log("Total datos recibidos:", todosLosDatos.length);
+    console.log("Total datos recibidos:", DatosPlan2026.length);
     console.log("Filtro seleccionado:", mesFiltro);
 
     if (!mesFiltro) {
-        console.log("Mostrando todos:", todosLosDatos.length);
-        mostrarTabla(todosLosDatos);
+        console.log("Mostrando todos:", DatosPlan2026.length);
+        mostrarTabla(DatosPlan2026);
         return;
     }
 
-    const datosFiltrados = todosLosDatos.filter(fila => {
+    const datosFiltrados = DatosPlan2026.filter(fila => {
         const mes = fila[COLUMNA_MES];
 
         return mes !== null &&
@@ -160,7 +163,7 @@ function aplicarFiltro() {
     if (datosFiltrados.length === 0) {
         document.getElementById('tabla').style.display = 'none';
         document.getElementById('error').innerHTML =
-            `<div class="error">⚠️ No hay mantenimientos programados para el mes ${mesFiltro}</div>`;
+            `<div class="error"> No hay mantenimientos programados para el mes ${mesFiltro}</div>`;
     } else {
         mostrarTabla(datosFiltrados);
     }
@@ -170,15 +173,70 @@ function aplicarFiltro() {
 }
 
 
-
-
-
 // Limpiar filtro
 function limpiarFiltro() {
     document.getElementById('filtroMes').value = ''
     document.getElementById('error').innerHTML = ''
-    mostrarTabla(todosLosDatos)
+    mostrarTabla(DatosPlan2026)
 }
+
+document.getElementById('archivoMPautin').addEventListener('change', cargarArchivo);
+
+function cargarArchivo(event) {
+
+    const archivo = event.target.files[0];
+
+    if (!archivo) {
+        return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+
+        try {
+
+            const datos = new Uint8Array(e.target.result);
+
+            const workbook = XLSX.read(datos, {
+                type: 'array'
+            });
+
+            // Tomar la primera hoja
+            const nombreHoja = workbook.SheetNames[0];
+            const hoja = workbook.Sheets[nombreHoja];
+
+            // Convertir a array de objetos
+            datosArchivoExterno = XLSX.utils.sheet_to_json(hoja, {
+                defval: null
+            });
+
+            console.log("Archivo:", archivo.name);
+            console.log("Hoja:", nombreHoja);
+            console.log("Filas:", datosArchivoExterno.length);
+            console.log("Columnas:", Object.keys(datosArchivoExterno[0] || {}));
+
+            document.getElementById('estadoArchivo').innerHTML =
+                `✅ Archivo cargado: <strong>${archivo.name}</strong> 
+                 (${datosArchivoExterno.length} filas)`;
+
+        } catch (error) {
+
+            console.error("Error leyendo archivo:", error);
+
+            document.getElementById('estadoArchivo').innerHTML =
+                `❌ No se pudo leer el archivo`;
+
+        }
+    };
+
+    reader.readAsArrayBuffer(archivo);
+}
+
+
+
+
+
 
 // Ejecutar al cargar
 cargarDatos()

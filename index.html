@@ -8,8 +8,22 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Mantenimiento Preventivo</h1>
+    <!-- Cargar Archivos necesarios para el cruce -->
+    <div style="margin-top: 15px;">
+      <label for="archivoMPautin">
+          <strong>Cargar archivo MP Autin:</strong>
+      </label>
+
+      <input
+          type="file"
+          id="archivoMPautin"
+          accept=".xlsx"
+      >
+    </div>
+
+<div id="estadoArchivo" style="margin-top: 8px;"></div> 
+    <div class="container" id="VerificacionPlanMensual" >
+        <h1>Verificacion Plan Mensual</h1>
         
         <div style="margin-bottom: 20px; padding: 15px; background: #f0f8ff; border-radius: 5px;">
             <label for="filtroMes" style="font-weight: bold; margin-right: 10px;">Filtrar por mes:</label>
@@ -43,6 +57,8 @@
         </table>
     </div>
 
+    
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <script src="app.js" defer></script>
 </body>
 </html>
