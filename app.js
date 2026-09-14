@@ -1,6 +1,6 @@
 const SUPABASE_URL = 'https://ugayglaqrwccynrikxvp.supabase.co'
 const SUPABASE_ANON_KEY = 'sb_publishable_OjWWKzcoEuR9rwhCQyiRcA_3gsKbRpA'
-const TavlaPlan2026 = 'Plan2026' // Cambia al nombre de tu tabla
+const TablaPlan2026 = 'Plan2026' // Cambia al nombre de tu tabla
 const COLUMNA_MES = 'mes a ejecutar' 
 const COLUMNAS_MOSTRAR = ['Site Id', 'Site Name', 'TipoN', "mes a ejecutar"] 
 
@@ -11,44 +11,86 @@ let todosLosDatos = []
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 // Traer datos
+
 async function cargarDatos() {
     try {
-        console.log('Conectando a tabla:', TavlaPlan2026)
-        console.log('URL:', SUPABASE_URL)
-        
-        const { data, error } = await supabaseClient
-            .from(TavlaPlan2026)
-            .select('*')
+        console.log('Conectando a tabla:', TablaPlan2026);
+        console.log('URL:', SUPABASE_URL);
 
-        console.log('Error:', error)
-        console.log('Datos recibidos:', data)
+        const limite = 1000;
+        let todosLosRegistros = [];
+        let desde = 0;
 
-        if (error) {
-            throw new Error(`Error Supabase: ${error.message}`)
+        while (true) {
+            console.log(`Consultando registros ${desde + 1} hasta ${desde + limite}...`);
+
+            const { data, error } = await supabaseClient
+                .from(TablaPlan2026)
+                .select('*')
+                .range(desde, desde + limite - 1);
+
+            if (error) {
+                throw new Error(`Error Supabase: ${error.message}`);
+            }
+
+            if (!data || data.length === 0) {
+                break;
+            }
+
+            todosLosRegistros = todosLosRegistros.concat(data);
+
+            console.log(`Registros obtenidos en esta consulta: ${data.length}`);
+            console.log(`Total acumulado: ${todosLosRegistros.length}`);
+
+            // Si llegaron menos de 1000, ya no hay más registros
+            if (data.length < limite) {
+                break;
+            }
+
+            desde += limite;
         }
 
-        if (!data || data.length === 0) {
-            document.getElementById('error').innerHTML = 
-                `<div class="error">⚠️ No hay datos en la tabla "${TavlaPlan2026}"<br>
-                Verifica:<br>
-                1. El nombre de la tabla es correcto<br>
-                2. La tabla tiene datos<br>
-                3. Row Level Security permite lectura (ve a Supabase → RLS)<br>
-                Abre F12 para ver la consola del navegador</div>`
-            document.getElementById('loading').style.display = 'none'
-            return
+        console.log('TOTAL DE DATOS RECIBIDOS:', todosLosRegistros.length);
+
+        if (todosLosRegistros.length === 0) {
+            document.getElementById('error').innerHTML =
+                `<div class="error">
+                    ⚠️ No hay datos en la tabla "${TablaPlan2026}"<br>
+                    Verifica:<br>
+                    1. El nombre de la tabla es correcto<br>
+                    2. La tabla tiene datos<br>
+                    3. Row Level Security permite lectura
+                </div>`;
+
+            document.getElementById('loading').style.display = 'none';
+            return;
         }
 
-        // Guardar todos los datos en variable global
-        todosLosDatos = data
-        mostrarTabla(data)
+        // Guardar TODOS los datos
+        todosLosDatos = todosLosRegistros;
+
+        // Mostrar todos los datos
+        mostrarTabla(todosLosDatos);
+
+        // Actualizar contador
+        const contador = document.getElementById('contadorFilas');
+        if (contador) {
+            contador.textContent = `Mostrando ${todosLosDatos.length} filas`;
+        }
+
     } catch (err) {
-        console.error('Error completo:', err)
-        document.getElementById('error').innerHTML = 
-            `<div class="error">❌ Error: ${err.message}<br>Abre F12 para más detalles</div>`
-        document.getElementById('loading').style.display = 'none'
+        console.error('Error completo:', err);
+
+        document.getElementById('error').innerHTML =
+            `<div class="error">
+                ❌ Error: ${err.message}<br>
+                Abre F12 para más detalles
+            </div>`;
+
+        document.getElementById('loading').style.display = 'none';
     }
 }
+
 
 function mostrarTabla(datos) {
     document.getElementById('loading').style.display = 'none'
