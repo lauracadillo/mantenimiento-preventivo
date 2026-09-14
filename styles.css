@@ -719,3 +719,63 @@ tbody tr:hover {
     }
 
 }
+
+.archivos-container {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin: 15px 0;
+}
+
+.archivo-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    min-width: 250px;
+    background: #fff;
+    transition: all 0.3s ease;
+}
+
+.archivo-card.cargando {
+    border-color: #f0ad4e;
+    background: #fff8e8;
+}
+
+.archivo-card.cargado {
+    border-color: #28a745;
+    background: #f0fff4;
+}
+
+.archivo-card.error {
+    border-color: #dc3545;
+    background: #fff5f5;
+}
+
+.archivo-titulo {
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 6px;
+}
+
+.archivo-estado {
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.estado-cargando {
+    color: #d68910;
+}
+
+.estado-cargado {
+    color: #218838;
+}
+
+.estado-error {
+    color: #c82333;
+}
+
+.nombre-archivo {
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+}

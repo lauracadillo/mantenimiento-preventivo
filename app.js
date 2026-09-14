@@ -190,6 +190,24 @@ let datosArchivos = {
     otroArchivo: []
 };
 
+let estadoArchivos = {
+    correctivos: {
+        estado: 'pendiente',
+        nombre: '',
+        filas: 0
+    },
+    alarmas: {
+        estado: 'pendiente',
+        nombre: '',
+        filas: 0
+    },
+    otroArchivo: {
+        estado: 'pendiente',
+        nombre: '',
+        filas: 0
+    }
+};
+
 
 function cargarArchivo(event, nombreArchivo, nombreHoja) {
 
@@ -199,7 +217,19 @@ function cargarArchivo(event, nombreArchivo, nombreHoja) {
         return;
     }
 
+    // ==========================================
+    // ESTADO: CARGANDO
+    // ==========================================
+
+    estadoArchivos[nombreArchivo].estado = 'cargando';
+    estadoArchivos[nombreArchivo].nombre = archivo.name;
+    estadoArchivos[nombreArchivo].filas = 0;
+
+    actualizarEstadoArchivos();
+
+
     const reader = new FileReader();
+
 
     reader.onload = function(e) {
 
@@ -207,16 +237,19 @@ function cargarArchivo(event, nombreArchivo, nombreHoja) {
 
             let datos = [];
 
+
             // ==========================================
             // CSV
             // ==========================================
 
-            if (archivo.name.toLowerCase().endsWith('.csv')) {
+            if (
+                archivo.name.toLowerCase().endsWith('.csv')
+            ) {
 
                 const texto = e.target.result;
 
-                // Detectar separador
-                const primeraLinea = texto.split(/\r?\n/)[0];
+                const primeraLinea =
+                    texto.split(/\r?\n/)[0];
 
                 let separador = ';';
 
@@ -227,10 +260,13 @@ function cargarArchivo(event, nombreArchivo, nombreHoja) {
                     separador = ',';
                 }
 
-                const workbook = XLSX.read(texto, {
-                    type: 'string',
-                    FS: separador
-                });
+                const workbook = XLSX.read(
+                    texto,
+                    {
+                        type: 'string',
+                        FS: separador
+                    }
+                );
 
                 const nombrePrimeraHoja =
                     workbook.SheetNames[0];
@@ -247,6 +283,7 @@ function cargarArchivo(event, nombreArchivo, nombreHoja) {
 
             }
 
+
             // ==========================================
             // EXCEL
             // ==========================================
@@ -256,83 +293,110 @@ function cargarArchivo(event, nombreArchivo, nombreHoja) {
                 const datosBinarios =
                     new Uint8Array(e.target.result);
 
-                const workbook = XLSX.read(
-                    datosBinarios,
-                    {
-                        type: 'array'
-                    }
-                );
+                const workbook =
+                    XLSX.read(
+                        datosBinarios,
+                        {
+                            type: 'array'
+                        }
+                    );
 
-                // Verificar hoja
+
                 if (
                     !workbook.SheetNames.includes(nombreHoja)
                 ) {
 
                     throw new Error(
-                        `La hoja "${nombreHoja}" no existe en ${archivo.name}. ` +
-                        `Hojas disponibles: ${workbook.SheetNames.join(', ')}`
+                        `La hoja "${nombreHoja}" no existe. ` +
+                        `Hojas disponibles: ` +
+                        `${workbook.SheetNames.join(', ')}`
                     );
                 }
+
 
                 const hoja =
                     workbook.Sheets[nombreHoja];
 
-                datos = XLSX.utils.sheet_to_json(
-                    hoja,
-                    {
-                        defval: null
-                    }
-                );
+
+                datos =
+                    XLSX.utils.sheet_to_json(
+                        hoja,
+                        {
+                            defval: null
+                        }
+                    );
             }
 
 
             // ==========================================
-            // GUARDAR EN EL ARCHIVO CORRESPONDIENTE
+            // GUARDAR DATOS
             // ==========================================
 
             datosArchivos[nombreArchivo] = datos;
 
 
             // ==========================================
-            // INFORMACIÓN EN CONSOLA
+            // ESTADO: CARGADO
             // ==========================================
 
-            console.log('==============================');
-            console.log('Archivo:', archivo.name);
-            console.log('Identificador:', nombreArchivo);
-            console.log('Hoja:', nombreHoja);
-            console.log('Filas:', datos.length);
-            console.log(
-                'Columnas:',
-                Object.keys(datos[0] || {})
-            );
-            console.log('==============================');
+            estadoArchivos[nombreArchivo].estado =
+                'cargado';
 
+            estadoArchivos[nombreArchivo].nombre =
+                archivo.name;
 
-            // ==========================================
-            // MOSTRAR ESTADO
-            // ==========================================
+            estadoArchivos[nombreArchivo].filas =
+                datos.length;
+
 
             actualizarEstadoArchivos();
+
+
+            console.log(
+                `Archivo ${nombreArchivo} cargado:`,
+                datos.length,
+                'filas'
+            );
 
         } catch (error) {
 
             console.error(
-                'Error leyendo archivo:',
+                `Error cargando ${archivo.name}:`,
                 error
             );
 
-            document.getElementById(
-                'estadoArchivo'
-            ).innerHTML =
-                `❌ Error leyendo <strong>${archivo.name}</strong>: 
-                 ${error.message}`;
+
+            // ==========================================
+            // ESTADO: ERROR
+            // ==========================================
+
+            estadoArchivos[nombreArchivo].estado =
+                'error';
+
+            estadoArchivos[nombreArchivo].nombre =
+                archivo.name;
+
+            estadoArchivos[nombreArchivo].filas =
+                0;
+
+
+            actualizarEstadoArchivos();
         }
     };
 
 
+    reader.onerror = function() {
+
+        estadoArchivos[nombreArchivo].estado =
+            'error';
+
+        actualizarEstadoArchivos();
+
+    };
+
+
     // ==========================================
-    // TIPO DE LECTURA
+    // INICIAR LECTURA
     // ==========================================
 
     if (
@@ -352,33 +416,100 @@ function cargarArchivo(event, nombreArchivo, nombreHoja) {
     }
 }
 
-
-
 function actualizarEstadoArchivos() {
 
-    const estado =
-        document.getElementById('estadoArchivo');
+    Object.entries(estadoArchivos).forEach(
+        ([nombre, info]) => {
 
-    estado.innerHTML = '';
+            const estado =
+                document.getElementById(
+                    `estado-${nombre}`
+                );
 
-    Object.entries(datosArchivos).forEach(
-        ([nombre, datos]) => {
+            const card =
+                document.getElementById(
+                    `card-${nombre}`
+                );
 
-            if (datos.length > 0) {
 
-                const div =
-                    document.createElement('div');
-
-                div.innerHTML =
-                    `✅ <strong>${nombre}</strong>: 
-                     ${datos.length} filas`;
-
-                estado.appendChild(div);
+            if (!estado || !card) {
+                return;
             }
+
+
+            // Limpiar clases
+            card.classList.remove(
+                'cargando',
+                'cargado',
+                'error'
+            );
+
+
+            // ==========================================
+            // PENDIENTE
+            // ==========================================
+
+            if (info.estado === 'pendiente') {
+
+                estado.innerHTML =
+                    `⚪ Pendiente`;
+            }
+
+
+            // ==========================================
+            // CARGANDO
+            // ==========================================
+
+            else if (info.estado === 'cargando') {
+
+                card.classList.add('cargando');
+
+                estado.innerHTML =
+                    `<span class="estado-cargando">
+                        🔄 Cargando...
+                    </span>`;
+            }
+
+
+            // ==========================================
+            // CARGADO
+            // ==========================================
+
+            else if (info.estado === 'cargado') {
+
+                card.classList.add('cargado');
+
+                estado.innerHTML =
+                    `<span class="estado-cargado">
+                        ✅ Cargado
+                    </span>
+                    <div class="nombre-archivo">
+                        ${info.nombre}<br>
+                        ${info.filas.toLocaleString()} filas
+                    </div>`;
+            }
+
+
+            // ==========================================
+            // ERROR
+            // ==========================================
+
+            else if (info.estado === 'error') {
+
+                card.classList.add('error');
+
+                estado.innerHTML =
+                    `<span class="estado-error">
+                        ❌ Error al cargar
+                    </span>
+                    <div class="nombre-archivo">
+                        ${info.nombre}
+                    </div>`;
+            }
+
         }
     );
 }
-
 // ============================================================
 // LOGIN
 // ============================================================
