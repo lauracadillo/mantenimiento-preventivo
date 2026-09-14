@@ -152,9 +152,37 @@
             <div class="file-upload-card">
                 <div>
                     <h3> Archivo MP Autin </h3>
-                    <p> Carga el archivo Excel para realizar ol cruce de información.</p>
                 </div>
-                <input type="file" id="archivoMPautin"  accept=".xlsx" >
+                <input type="file" id="archivoMPautin"  accept=".xlsx" onchange="cargarArchivo(event, 'preventivo', 'Data Preventivos')">
+                <div id="estadoArchivo" class="file-status"></div>
+              </div>
+            </div>
+
+            <div class="file-upload-card">
+                <div>
+                    <h3> Archivo CM Autin </h3>
+                </div>
+                <input type="file" id="archivoCMautin"  accept=".xlsx" onchange="cargarArchivo(event, 'correctivo', 'Data')" >
+                <div id="estadoArchivo" class="file-status"></div>
+              </div>
+            </div>
+
+            <div class="file-upload-card">
+                <div>
+                    <a href="https://integratelcorp-my.sharepoint.com/:x:/r/personal/peter_durand_integratel_com_pe/_layouts/15/Doc.aspx?sourcedoc=%7B4ED8FA29-BCCA-4B27-810A-B82A496236B2%7D&file=REPORTE%20SWAPS%20EJECUTADOS%20NEW.xlsm&action=default&mobileredirect=true&DefaultItemOpen=1"> Archivo SWAP <a>
+                    <p>Descargar hoja "BASE" como CSV</p>
+                </div>
+                <input type="file" id="archivoSWAP"  accept=".csv" onchange="cargarArchivo(event, 'swap')" >
+                <div id="estadoArchivo" class="file-status"></div>
+              </div>
+            </div>
+
+            <div class="file-upload-card">
+                <div>
+                    <h3> Archivo Blacklist </h3>
+                    
+                </div>
+                <input type="file" id="archivoBlacklist"  accept=".xlsx"  onchange="cargarArchivo(event, 'blacklist', 'Sheet1')">
                 <div id="estadoArchivo" class="file-status"></div>
               </div>
             </div>

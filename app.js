@@ -180,9 +180,18 @@ function limpiarFiltro() {
     mostrarTabla(DatosPlan2026)
 }
 
-document.getElementById('archivoMPautin').addEventListener('change', cargarArchivo);
+// document.getElementById('archivoPMautin').addEventListener('change', (event) => {cargarArchivo(event, 'Data Preventivo');});
+// document.getElementById('archivoCMautin').addEventListener('change', (event) => {cargarArchivo(event, 'Data');});
 
-function cargarArchivo(event) {
+
+let datosArchivos = {
+    correctivos: [],
+    alarmas: [],
+    otroArchivo: []
+};
+
+
+function cargarArchivo(event, nombreArchivo, nombreHoja) {
 
     const archivo = event.target.files[0];
 
@@ -196,43 +205,152 @@ function cargarArchivo(event) {
 
         try {
 
-            const datos = new Uint8Array(e.target.result);
+            let datos = [];
 
-            const workbook = XLSX.read(datos, {
-                type: 'array'
-            });
+            // ==========================================
+            // CSV
+            // ==========================================
 
-            // Tomar la primera hoja
-            // const nombreHoja = workbook.SheetNames[0];
-            const hoja = workbook.Sheets[HojaArchivoMPautin];
+            if (archivo.name.toLowerCase().endsWith('.csv')) {
 
-            // Convertir a array de objetos
-            datosArchivoExterno = XLSX.utils.sheet_to_json(hoja, {
-                defval: null
-            });
+                const texto = e.target.result;
 
-            console.log("Archivo:", archivo.name);
-            console.log("Hoja:", HojaArchivoMPautin);
-            console.log("Filas:", datosArchivoExterno.length);
-            console.log("Columnas:", Object.keys(datosArchivoExterno[0] || {}));
+                // Detectar separador
+                const primeraLinea = texto.split(/\r?\n/)[0];
 
-            document.getElementById('estadoArchivo').innerHTML =
-                `✅ Archivo cargado: <strong>${archivo.name}</strong> 
-                 (${datosArchivoExterno.length} filas)`;
+                let separador = ';';
+
+                if (
+                    primeraLinea.includes(',') &&
+                    !primeraLinea.includes(';')
+                ) {
+                    separador = ',';
+                }
+
+                const workbook = XLSX.read(texto, {
+                    type: 'string',
+                    FS: separador
+                });
+
+                const nombrePrimeraHoja =
+                    workbook.SheetNames[0];
+
+                const hoja =
+                    workbook.Sheets[nombrePrimeraHoja];
+
+                datos = XLSX.utils.sheet_to_json(
+                    hoja,
+                    {
+                        defval: null
+                    }
+                );
+
+            }
+
+            // ==========================================
+            // EXCEL
+            // ==========================================
+
+            else {
+
+                const datosBinarios =
+                    new Uint8Array(e.target.result);
+
+                const workbook = XLSX.read(
+                    datosBinarios,
+                    {
+                        type: 'array'
+                    }
+                );
+
+                // Verificar hoja
+                if (
+                    !workbook.SheetNames.includes(nombreHoja)
+                ) {
+
+                    throw new Error(
+                        `La hoja "${nombreHoja}" no existe en ${archivo.name}. ` +
+                        `Hojas disponibles: ${workbook.SheetNames.join(', ')}`
+                    );
+                }
+
+                const hoja =
+                    workbook.Sheets[nombreHoja];
+
+                datos = XLSX.utils.sheet_to_json(
+                    hoja,
+                    {
+                        defval: null
+                    }
+                );
+            }
+
+
+            // ==========================================
+            // GUARDAR EN EL ARCHIVO CORRESPONDIENTE
+            // ==========================================
+
+            datosArchivos[nombreArchivo] = datos;
+
+
+            // ==========================================
+            // INFORMACIÓN EN CONSOLA
+            // ==========================================
+
+            console.log('==============================');
+            console.log('Archivo:', archivo.name);
+            console.log('Identificador:', nombreArchivo);
+            console.log('Hoja:', nombreHoja);
+            console.log('Filas:', datos.length);
+            console.log(
+                'Columnas:',
+                Object.keys(datos[0] || {})
+            );
+            console.log('==============================');
+
+
+            // ==========================================
+            // MOSTRAR ESTADO
+            // ==========================================
+
+            actualizarEstadoArchivos();
 
         } catch (error) {
 
-            console.error("Error leyendo archivo:", error);
+            console.error(
+                'Error leyendo archivo:',
+                error
+            );
 
-            document.getElementById('estadoArchivo').innerHTML =
-                `❌ No se pudo leer el archivo`;
-
+            document.getElementById(
+                'estadoArchivo'
+            ).innerHTML =
+                `❌ Error leyendo <strong>${archivo.name}</strong>: 
+                 ${error.message}`;
         }
     };
 
-    reader.readAsArrayBuffer(archivo);
-}
 
+    // ==========================================
+    // TIPO DE LECTURA
+    // ==========================================
+
+    if (
+        archivo.name.toLowerCase().endsWith('.csv')
+    ) {
+
+        reader.readAsText(
+            archivo,
+            'UTF-8'
+        );
+
+    } else {
+
+        reader.readAsArrayBuffer(
+            archivo
+        );
+    }
+}
 
 
 
