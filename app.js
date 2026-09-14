@@ -212,7 +212,7 @@ function cargarArchivo(event) {
             });
 
             console.log("Archivo:", archivo.name);
-            console.log("Hoja:", nombreHoja);
+            console.log("Hoja:", HojaArchivoMPautin);
             console.log("Filas:", datosArchivoExterno.length);
             console.log("Columnas:", Object.keys(datosArchivoExterno[0] || {}));
 
