@@ -196,12 +196,17 @@ let estadoArchivos = {
         nombre: '',
         filas: 0
     },
-    alarmas: {
+    preventivo: {
         estado: 'pendiente',
         nombre: '',
         filas: 0
     },
-    otroArchivo: {
+    swap: {
+        estado: 'pendiente',
+        nombre: '',
+        filas: 0
+    },
+    blacklist: {
         estado: 'pendiente',
         nombre: '',
         filas: 0
