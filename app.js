@@ -21,6 +21,43 @@ let estadoArchivos = {
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
+
+async function cargarTablaSupabase(nombreTabla) {
+    console.log('Conectando a tabla:', nombreTabla);
+
+    const limite = 1000;
+    let todosLosRegistros = [];
+    let desde = 0;
+
+    while (true) {
+        const { data, error } = await supabaseClient
+            .from(nombreTabla)
+            .select('*')
+            .range(desde, desde + limite - 1);
+
+        if (error) {
+            throw new Error(`Error Supabase en "${nombreTabla}": ${error.message}`);
+        }
+
+        if (!data || data.length === 0) {
+            break;
+        }
+
+        todosLosRegistros = todosLosRegistros.concat(data);
+
+        // Si llegaron menos de 1000, ya no hay más registros
+        if (data.length < limite) {
+            break;
+        }
+
+        desde += limite;
+    }
+
+    return todosLosRegistros;
+}
+
+
+
 async function cargarDatos() {
     try {
         console.log('URL:', SUPABASE_URL);
