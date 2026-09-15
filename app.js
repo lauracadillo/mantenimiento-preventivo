@@ -424,7 +424,8 @@ function verificarExclusión(siteId, tipo) {
     // Tipos que aplican para exclusión por swap
     const TIPOS_SWAP = ["B_1", "B_2", "B_3"];
     
-    // Crear mapa de swap indexado por "Site Id"
+    // Crear mapa de swap indexado por "Site Id"y
+    console.table(datosArchivos.swap)
     const swap_map = {};
     datosArchivos.swap.forEach(fila => {
         const siteIdKey = fila["CODIGO UNICO"]?.toString();
