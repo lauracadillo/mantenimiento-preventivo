@@ -453,8 +453,8 @@ function verificarExclusión(siteId, tipo) {
     // ==========================================
     // VERIFICAR BLACKLIST PRIMERO
     // ==========================================
-    if (datosArchivos.blacklist && Array.isArray(datosArchivos.blacklist)) {
-        const enBlacklist = datosArchivos.blacklist.some(fila => {
+    if (DatosBlacklist && Array.isArray(DatosBlacklist)) {
+        const enBlacklist = DatosBlacklist.some(fila => {
             return fila['CU']?.toString() === siteIdStr;
         });
         
@@ -473,8 +473,8 @@ function verificarExclusión(siteId, tipo) {
     // Crear mapa de swap indexado por "Site Id"
     const swap_map = {};
     
-    if (datosArchivos.swap && Array.isArray(datosArchivos.swap)) {
-        datosArchivos.swap.forEach(fila => {
+    if (DatosSwap && Array.isArray(DatosSwap)) {
+        DatosSwap.forEach(fila => {
             const siteIdKey = fila["CODIGO UNICO"]?.toString();
             if (siteIdKey) {
                 swap_map[siteIdKey] = {
