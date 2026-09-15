@@ -15,7 +15,6 @@ let estadoArchivos = {
     blacklist: {estado: 'pendiente', nombre: '', filas: 0}
 };
 
-// Inicializar Supabase
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 async function cargarDatos() {
@@ -124,18 +123,19 @@ function mostrarTabla(datos) {
         columnas.forEach(col => {
             const td = document.createElement('td')
             // Logica especial para columna "Excluir"
+            // Logica especial para columna "Excluir"
             if (col === 'Excluir') {
                 const siteId = fila['Site Id'];
-                const estado = verificarExclusión(siteId);
+                const tipo = fila['TipoN']; // ⭐ Pasar el tipo aquí
+                const estado = verificarExclusión(siteId, tipo);
                 
                 td.textContent = estado.motivo;
                 
-                // Aplicar estilos según el motivo
+                // Aplicar estilos si está excluido (Sí)
                 if (estado.excluir) {
-                    td.style.backgroundColor = '#ffebee';  // Rojo claro
-                    td.style.color = '#c62828';             // Rojo oscuro
+                    td.style.backgroundColor = '#ffebee';
+                    td.style.color = '#c62828';
                     td.style.fontWeight = 'bold';
-                    td.title = `Este sitio está en ${estado.motivo.toLowerCase()}`;
                 }
             } else {
                 td.textContent = fila[col] || '-'
@@ -415,31 +415,66 @@ function actualizarEstadoArchivos() {
     );
 }
 
-function verificarExclusión(siteId) {
-    // Busca el Site ID en el array de swap
-    const enSwap = datosArchivos.swap.some(fila => {
-        return fila['Site Id']?.toString() === siteId?.toString() ||
-               fila['SiteId']?.toString() === siteId?.toString() ||
-               fila['site id']?.toString() === siteId?.toString();
+// ============================================================
+// FUNCIÓN AUXILIAR: Verificar estado de exclusión por SWAP
+// ============================================================
+
+function verificarExclusión(siteId, tipo) {
+    
+    // Tipos que aplican para exclusión por swap
+    const TIPOS_SWAP = ["B_1", "B_2", "B_3"];
+    
+    // Crear mapa de swap indexado por "Site Id"
+    const swap_map = {};
+    datosArchivos.swap.forEach(fila => {
+        const siteIdKey = fila["Site Id"]?.toString();
+        if (siteIdKey) {
+            swap_map[siteIdKey] = {
+                "SWAP RAN REAL": fila["SWAP RAN REAL"],
+                "Despliegue": fila["Despliegue"]
+            };
+        }
     });
-
-    if (enSwap) {
-        return { excluir: true, motivo: 'Swap' };
+    
+    // Verificar si el Site Id está en el mapa Y el tipo está en TIPOS_SWAP
+    const siteIdStr = siteId?.toString();
+    
+    if (!swap_map[siteIdStr] || !TIPOS_SWAP.includes(tipo?.toString())) {
+        return {
+            excluir: false,
+            motivo: "No"
+        };
     }
-
-    // Busca el Site ID en el array de blacklist
-    const enBlacklist = datosArchivos.blacklist.some(fila => {
-        return fila['Site Id']?.toString() === siteId?.toString() ||
-               fila['SiteId']?.toString() === siteId?.toString() ||
-               fila['site id']?.toString() === siteId?.toString();
-    });
-
-    if (enBlacklist) {
-        return { excluir: true, motivo: 'Blacklist' };
+    
+    // Obtener valores de swap
+    const swap_real = swap_map[siteIdStr]["SWAP RAN REAL"];
+    const despliegue = swap_map[siteIdStr]["Despliegue"];
+    
+    // Validar y parsear fecha de SWAP RAN REAL
+    let fecha = despliegue; // Por defecto usar Despliegue
+    
+    if (swap_real && swap_real.trim() !== "") {
+        try {
+            const fecha_ts = new Date(swap_real);
+            
+            // Verificar si es una fecha válida y no es "00:00:00"
+            if (!isNaN(fecha_ts.getTime()) && swap_real !== "00:00:00") {
+                // Formatear como dd/mm/yyyy
+                const day = String(fecha_ts.getDate()).padStart(2, '0');
+                const month = String(fecha_ts.getMonth() + 1).padStart(2, '0');
+                const year = fecha_ts.getFullYear();
+                fecha = `${day}/${month}/${year}`;
+            }
+        } catch (e) {
+            // Si hay error al parsear, usar Despliegue
+            fecha = despliegue;
+        }
     }
-
-    // Si no está en ninguno
-    return { excluir: false, motivo: '-' };
+    
+    return {
+        excluir: true,
+        motivo: `Sí (${fecha})`
+    };
 }
 // ============================================================
 // LOGIN
