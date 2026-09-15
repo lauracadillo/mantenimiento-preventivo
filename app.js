@@ -2,7 +2,7 @@ const SUPABASE_URL = 'https://ugayglaqrwccynrikxvp.supabase.co'
 const SUPABASE_ANON_KEY = 'sb_publishable_OjWWKzcoEuR9rwhCQyiRcA_3gsKbRpA'
 const TablaPlan2026 = 'Plan2026' 
 const COLUMNA_MES = 'mes a ejecutar' 
-const COLUMNAS_MOSTRAR = ['Site Id', 'Site Name', 'TipoN', "mes a ejecutar", 'Excluir'] 
+const ColsVerificacionMensual = ['Site Id', 'Site Name', 'TipoN', "mes a ejecutar", 'Excluir'] 
 const HojaArchivoMPautin = 'Data Preventivo'
 
 let DatosPlan2026 = []
@@ -92,54 +92,6 @@ async function cargarDatos() {
 }
 
 
-// ============================================================
-// FUNCIÓN AUXILIAR: Verificar estado de exclusión
-// ============================================================
-
-function verificarExclusión(siteId) {
-    /**
-     * Verifica si un Site ID está en swap o blacklist
-     * Retorna un objeto con:
-     * - excluir: boolean
-     * - motivo: string ('swap', 'blacklist', o vacío)
-     */
-
-    // Buscar en swap
-    const enSwap = datosArchivos.swap.some(fila => {
-        return fila['Site Id']?.toString() === siteId?.toString() ||
-               fila['SiteId']?.toString() === siteId?.toString() ||
-               fila['site id']?.toString() === siteId?.toString();
-    });
-
-    if (enSwap) {
-        return {
-            excluir: true,
-            motivo: 'Swap'
-        };
-    }
-
-    // Buscar en blacklist
-    const enBlacklist = datosArchivos.blacklist.some(fila => {
-        return fila['Site Id']?.toString() === siteId?.toString() ||
-               fila['SiteId']?.toString() === siteId?.toString() ||
-               fila['site id']?.toString() === siteId?.toString();
-    });
-
-    if (enBlacklist) {
-        return {
-            excluir: true,
-            motivo: 'Blacklist'
-        };
-    }
-
-    // No está excluido
-    return {
-        excluir: false,
-        motivo: '-'
-    };
-}
-
-
 function mostrarTabla(datos) {
     document.getElementById('loading').style.display = 'none'
     document.getElementById('tabla').style.display = 'table'
@@ -154,9 +106,10 @@ function mostrarTabla(datos) {
             `<div class="error"> No hay registros para mostrar</div>`
         return
     }
+    
 
     // Encabezados
-    const columnas = COLUMNAS_MOSTRAR
+    const columnas = ColsVerificacionMensual
     const encabezados = document.getElementById('encabezados')
     columnas.forEach(col => {
         const th = document.createElement('th')
@@ -170,7 +123,6 @@ function mostrarTabla(datos) {
         const tr = document.createElement('tr')
         columnas.forEach(col => {
             const td = document.createElement('td')
-            
             // Logica especial para columna "Excluir"
             if (col === 'Excluir') {
                 const siteId = fila['Site Id'];
@@ -180,15 +132,14 @@ function mostrarTabla(datos) {
                 
                 // Aplicar estilos según el motivo
                 if (estado.excluir) {
-                    td.style.backgroundColor = '#ffebee';
-                    td.style.color = '#c62828';
+                    td.style.backgroundColor = '#ffebee';  // Rojo claro
+                    td.style.color = '#c62828';             // Rojo oscuro
                     td.style.fontWeight = 'bold';
                     td.title = `Este sitio está en ${estado.motivo.toLowerCase()}`;
                 }
             } else {
                 td.textContent = fila[col] || '-'
             }
-            
             tr.appendChild(td)
         })
         tbody.appendChild(tr)
@@ -203,8 +154,6 @@ function aplicarFiltro() {
 
     console.log("Total datos recibidos:", DatosPlan2026.length);
     console.log("Filtro seleccionado:", mesFiltro);
-    console.log("Datos swap cargados:", datosArchivos.swap.length);
-    console.log("Datos blacklist cargados:", datosArchivos.blacklist.length);
 
     if (!mesFiltro) {
         console.log("Mostrando todos:", DatosPlan2026.length);
@@ -356,6 +305,7 @@ function cargarArchivo(event, nombreArchivo, nombreHoja) {
                 aplicarFiltro();
             }
 
+
             console.log(
                 `Archivo ${nombreArchivo} cargado:`,
                 datos.length,
@@ -471,6 +421,33 @@ function actualizarEstadoArchivos() {
         }
     );
 }
+
+function verificarExclusión(siteId) {
+    // Busca el Site ID en el array de swap
+    const enSwap = datosArchivos.swap.some(fila => {
+        return fila['Site Id']?.toString() === siteId?.toString() ||
+               fila['SiteId']?.toString() === siteId?.toString() ||
+               fila['site id']?.toString() === siteId?.toString();
+    });
+
+    if (enSwap) {
+        return { excluir: true, motivo: 'Swap' };
+    }
+
+    // Busca el Site ID en el array de blacklist
+    const enBlacklist = datosArchivos.blacklist.some(fila => {
+        return fila['Site Id']?.toString() === siteId?.toString() ||
+               fila['SiteId']?.toString() === siteId?.toString() ||
+               fila['site id']?.toString() === siteId?.toString();
+    });
+
+    if (enBlacklist) {
+        return { excluir: true, motivo: 'Blacklist' };
+    }
+
+    // Si no está en ninguno
+    return { excluir: false, motivo: '-' };
+}
 // ============================================================
 // LOGIN
 // ============================================================
@@ -563,3 +540,5 @@ document.addEventListener(
         cargarDatos();
     }
 );
+
+
