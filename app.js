@@ -1,16 +1,19 @@
 const SUPABASE_URL = 'https://ugayglaqrwccynrikxvp.supabase.co'
 const SUPABASE_ANON_KEY = 'sb_publishable_OjWWKzcoEuR9rwhCQyiRcA_3gsKbRpA'
-const TablaPlan2026 = 'Plan2026' // Cambia al nombre de tu tabla
+const TablaPlan2026 = 'Plan2026' 
 const COLUMNA_MES = 'mes a ejecutar' 
-const COLUMNAS_MOSTRAR = ['Site Id', 'Site Name', 'TipoN', "mes a ejecutar"] 
+const COLUMNAS_MOSTRAR = ['Site Id', 'Site Name', 'TipoN', "mes a ejecutar", 'Excluir'] 
 const HojaArchivoMPautin = 'Data Preventivo'
-// Variable global para guardar todos los datos
+
 let DatosPlan2026 = []
-let datosAutin = []
+let datosArchivos = { correctivo: [], preventivo: [],  swap: [],  blacklist: []};
 
-
-
-
+let estadoArchivos = {
+    correctivo: {estado: 'pendiente', nombre: '', filas: 0},
+    preventivo: {estado: 'pendiente', nombre: '', filas: 0},
+    swap: {estado: 'pendiente', nombre: '', filas: 0},
+    blacklist: {estado: 'pendiente', nombre: '', filas: 0}
+};
 
 // Inicializar Supabase
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
@@ -25,7 +28,6 @@ async function cargarDatos() {
         let desde = 0;
 
         while (true) {
-            console.log(`Consultando registros ${desde + 1} hasta ${desde + limite}...`);
 
             const { data, error } = await supabaseClient
                 .from(TablaPlan2026)
@@ -42,9 +44,6 @@ async function cargarDatos() {
 
             todosLosRegistros = todosLosRegistros.concat(data);
 
-            console.log(`Registros obtenidos en esta consulta: ${data.length}`);
-            console.log(`Total acumulado: ${todosLosRegistros.length}`);
-
             // Si llegaron menos de 1000, ya no hay más registros
             if (data.length < limite) {
                 break;
@@ -52,8 +51,6 @@ async function cargarDatos() {
 
             desde += limite;
         }
-
-        console.log('TOTAL DE DATOS RECIBIDOS:', todosLosRegistros.length);
 
         if (todosLosRegistros.length === 0) {
             document.getElementById('error').innerHTML =
@@ -73,7 +70,7 @@ async function cargarDatos() {
         DatosPlan2026 = todosLosRegistros;
 
         // Mostrar todos los datos
-        mostrarTabla(DatosPlan2026);
+        //mostrarTabla(DatosPlan2026);
 
         // Actualizar contador
         const contador = document.getElementById('contadorFilas');
@@ -86,12 +83,60 @@ async function cargarDatos() {
 
         document.getElementById('error').innerHTML =
             `<div class="error">
-                ❌ Error: ${err.message}<br>
+                Error: ${err.message}<br>
                 Abre F12 para más detalles
             </div>`;
 
         document.getElementById('loading').style.display = 'none';
     }
+}
+
+
+// ============================================================
+// FUNCIÓN AUXILIAR: Verificar estado de exclusión
+// ============================================================
+
+function verificarExclusión(siteId) {
+    /**
+     * Verifica si un Site ID está en swap o blacklist
+     * Retorna un objeto con:
+     * - excluir: boolean
+     * - motivo: string ('swap', 'blacklist', o vacío)
+     */
+
+    // Buscar en swap
+    const enSwap = datosArchivos.swap.some(fila => {
+        return fila['Site Id']?.toString() === siteId?.toString() ||
+               fila['SiteId']?.toString() === siteId?.toString() ||
+               fila['site id']?.toString() === siteId?.toString();
+    });
+
+    if (enSwap) {
+        return {
+            excluir: true,
+            motivo: 'Swap'
+        };
+    }
+
+    // Buscar en blacklist
+    const enBlacklist = datosArchivos.blacklist.some(fila => {
+        return fila['Site Id']?.toString() === siteId?.toString() ||
+               fila['SiteId']?.toString() === siteId?.toString() ||
+               fila['site id']?.toString() === siteId?.toString();
+    });
+
+    if (enBlacklist) {
+        return {
+            excluir: true,
+            motivo: 'Blacklist'
+        };
+    }
+
+    // No está excluido
+    return {
+        excluir: false,
+        motivo: '-'
+    };
 }
 
 
@@ -125,7 +170,25 @@ function mostrarTabla(datos) {
         const tr = document.createElement('tr')
         columnas.forEach(col => {
             const td = document.createElement('td')
-            td.textContent = fila[col] || '-'
+            
+            // Logica especial para columna "Excluir"
+            if (col === 'Excluir') {
+                const siteId = fila['Site Id'];
+                const estado = verificarExclusión(siteId);
+                
+                td.textContent = estado.motivo;
+                
+                // Aplicar estilos según el motivo
+                if (estado.excluir) {
+                    td.style.backgroundColor = '#ffebee';
+                    td.style.color = '#c62828';
+                    td.style.fontWeight = 'bold';
+                    td.title = `Este sitio está en ${estado.motivo.toLowerCase()}`;
+                }
+            } else {
+                td.textContent = fila[col] || '-'
+            }
+            
             tr.appendChild(td)
         })
         tbody.appendChild(tr)
@@ -134,14 +197,14 @@ function mostrarTabla(datos) {
     document.getElementById('error').innerHTML = ''
 }
 
-// Aplicar filtro por mes
-
 
 function aplicarFiltro() {
     const mesFiltro = document.getElementById('filtroMes').value;
 
     console.log("Total datos recibidos:", DatosPlan2026.length);
     console.log("Filtro seleccionado:", mesFiltro);
+    console.log("Datos swap cargados:", datosArchivos.swap.length);
+    console.log("Datos blacklist cargados:", datosArchivos.blacklist.length);
 
     if (!mesFiltro) {
         console.log("Mostrando todos:", DatosPlan2026.length);
@@ -183,37 +246,6 @@ function limpiarFiltro() {
 // document.getElementById('archivoPMautin').addEventListener('change', (event) => {cargarArchivo(event, 'Data Preventivo');});
 // document.getElementById('archivoCMautin').addEventListener('change', (event) => {cargarArchivo(event, 'Data');});
 
-
-let datosArchivos = {
-    correctivos: [],
-    alarmas: [],
-    otroArchivo: []
-};
-
-let estadoArchivos = {
-    correctivos: {
-        estado: 'pendiente',
-        nombre: '',
-        filas: 0
-    },
-    preventivo: {
-        estado: 'pendiente',
-        nombre: '',
-        filas: 0
-    },
-    swap: {
-        estado: 'pendiente',
-        nombre: '',
-        filas: 0
-    },
-    blacklist: {
-        estado: 'pendiente',
-        nombre: '',
-        filas: 0
-    }
-};
-
-
 function cargarArchivo(event, nombreArchivo, nombreHoja) {
 
     const archivo = event.target.files[0];
@@ -232,9 +264,7 @@ function cargarArchivo(event, nombreArchivo, nombreHoja) {
 
     actualizarEstadoArchivos();
 
-
     const reader = new FileReader();
-
 
     reader.onload = function(e) {
 
@@ -242,29 +272,20 @@ function cargarArchivo(event, nombreArchivo, nombreHoja) {
 
             let datos = [];
 
-
-            // ==========================================
-            // CSV
-            // ==========================================
-
             if (
                 archivo.name.toLowerCase().endsWith('.csv')
             ) {
 
                 const texto = e.target.result;
-
                 const primeraLinea =
                     texto.split(/\r?\n/)[0];
-
                 let separador = ';';
-
                 if (
                     primeraLinea.includes(',') &&
                     !primeraLinea.includes(';')
                 ) {
                     separador = ',';
                 }
-
                 const workbook = XLSX.read(
                     texto,
                     {
@@ -278,7 +299,6 @@ function cargarArchivo(event, nombreArchivo, nombreHoja) {
 
                 const hoja =
                     workbook.Sheets[nombrePrimeraHoja];
-
                 datos = XLSX.utils.sheet_to_json(
                     hoja,
                     {
@@ -287,11 +307,6 @@ function cargarArchivo(event, nombreArchivo, nombreHoja) {
                 );
 
             }
-
-
-            // ==========================================
-            // EXCEL
-            // ==========================================
 
             else {
 
@@ -306,7 +321,6 @@ function cargarArchivo(event, nombreArchivo, nombreHoja) {
                         }
                     );
 
-
                 if (
                     !workbook.SheetNames.includes(nombreHoja)
                 ) {
@@ -317,11 +331,7 @@ function cargarArchivo(event, nombreArchivo, nombreHoja) {
                         `${workbook.SheetNames.join(', ')}`
                     );
                 }
-
-
-                const hoja =
-                    workbook.Sheets[nombreHoja];
-
+                const hoja = workbook.Sheets[nombreHoja];
 
                 datos =
                     XLSX.utils.sheet_to_json(
@@ -332,30 +342,19 @@ function cargarArchivo(event, nombreArchivo, nombreHoja) {
                     );
             }
 
-
-            // ==========================================
-            // GUARDAR DATOS
-            // ==========================================
-
             datosArchivos[nombreArchivo] = datos;
 
-
-            // ==========================================
-            // ESTADO: CARGADO
-            // ==========================================
-
-            estadoArchivos[nombreArchivo].estado =
-                'cargado';
-
-            estadoArchivos[nombreArchivo].nombre =
-                archivo.name;
-
-            estadoArchivos[nombreArchivo].filas =
-                datos.length;
-
+            estadoArchivos[nombreArchivo].estado = 'cargado';
+            estadoArchivos[nombreArchivo].nombre = archivo.name;
+            estadoArchivos[nombreArchivo].filas = datos.length;
 
             actualizarEstadoArchivos();
 
+            // RE-RENDERIZAR LA TABLA SI HAY FILTRO APLICADO
+            const mesFiltro = document.getElementById('filtroMes').value;
+            if (mesFiltro) {
+                aplicarFiltro();
+            }
 
             console.log(
                 `Archivo ${nombreArchivo} cargado:`,
@@ -370,101 +369,61 @@ function cargarArchivo(event, nombreArchivo, nombreHoja) {
                 error
             );
 
-
-            // ==========================================
-            // ESTADO: ERROR
-            // ==========================================
-
-            estadoArchivos[nombreArchivo].estado =
-                'error';
-
-            estadoArchivos[nombreArchivo].nombre =
-                archivo.name;
-
-            estadoArchivos[nombreArchivo].filas =
-                0;
-
+            estadoArchivos[nombreArchivo].estado = 'error';
+            estadoArchivos[nombreArchivo].nombre = archivo.name;
+            estadoArchivos[nombreArchivo].filas = 0;
 
             actualizarEstadoArchivos();
         }
     };
 
-
     reader.onerror = function() {
 
-        estadoArchivos[nombreArchivo].estado =
-            'error';
-
+        estadoArchivos[nombreArchivo].estado = 'error';
         actualizarEstadoArchivos();
 
     };
 
-
-    // ==========================================
-    // INICIAR LECTURA
-    // ==========================================
-
     if (
         archivo.name.toLowerCase().endsWith('.csv')
     ) {
-
         reader.readAsText(
             archivo,
             'UTF-8'
         );
 
     } else {
-
-        reader.readAsArrayBuffer(
-            archivo
-        );
+        reader.readAsArrayBuffer( archivo );
     }
 }
 
 function actualizarEstadoArchivos() {
-
     Object.entries(estadoArchivos).forEach(
         ([nombre, info]) => {
-
             const estado =
                 document.getElementById(
                     `estado-${nombre}`
                 );
-
             const card =
                 document.getElementById(
                     `card-${nombre}`
                 );
-
-
             if (!estado || !card) {
                 return;
             }
-
-
             // Limpiar clases
             card.classList.remove(
                 'cargando',
                 'cargado',
                 'error'
             );
-
-
-            // ==========================================
-            // PENDIENTE
-            // ==========================================
-
             if (info.estado === 'pendiente') {
-
-                estado.innerHTML =
-                    `⚪ Pendiente`;
+                estado.innerHTML = `⚪ Pendiente`;
             }
-
 
             // ==========================================
             // CARGANDO
             // ==========================================
-
             else if (info.estado === 'cargando') {
 
                 card.classList.add('cargando');
@@ -474,7 +433,6 @@ function actualizarEstadoArchivos() {
                         🔄 Cargando...
                     </span>`;
             }
-
 
             // ==========================================
             // CARGADO
@@ -500,9 +458,7 @@ function actualizarEstadoArchivos() {
             // ==========================================
 
             else if (info.estado === 'error') {
-
                 card.classList.add('error');
-
                 estado.innerHTML =
                     `<span class="estado-error">
                         ❌ Error al cargar
@@ -521,23 +477,14 @@ function actualizarEstadoArchivos() {
 
 function iniciarSesion() {
 
-    const usuario =
-        document.getElementById("usuario").value.trim();
-
-    const password =
-        document.getElementById("password").value.trim();
-
-    const error =
-        document.getElementById("loginError");
-
+    const usuario = document.getElementById("usuario").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const error = document.getElementById("loginError");
 
     // LOGIN TEMPORAL
-    // --------------------------------------------------------
-    // Cambia estos valores posteriormente por Supabase
 
     const usuarioCorrecto = "admin";
     const passwordCorrecto = "1234";
-
 
     if (
         usuario === usuarioCorrecto &&
@@ -545,65 +492,43 @@ function iniciarSesion() {
     ) {
 
         error.textContent = "";
-
         document.getElementById("usuarioLogueado")
             .textContent = usuario;
-
         mostrarPagina("mainPage");
 
     } else {
-
-        error.textContent =
-            "Usuario o contraseña incorrectos.";
-
+        error.textContent = "Usuario o contraseña incorrectos.";
     }
 }
-
 
 // ============================================================
 // CERRAR SESIÓN
 // ============================================================
 
 function cerrarSesion() {
-
     document.getElementById("usuario").value = "";
-
     document.getElementById("password").value = "";
-
     document.getElementById("loginError").textContent = "";
-
     mostrarPagina("loginPage");
 }
-
 
 // ============================================================
 // ABRIR MÓDULO
 // ============================================================
 
 function abrirModulo(modulo) {
-
     switch (modulo) {
-
         case "certificacion":
-
             mostrarPagina("certificacionPage");
-
             break;
-
 
         case "verificacion":
-
             mostrarPagina("verificacionPage");
-
             break;
-
 
         case "reprogramacion":
-
             mostrarPagina("reprogramacionPage");
-
             break;
-
     }
 
 }
@@ -613,54 +538,28 @@ function abrirModulo(modulo) {
 // VOLVER AL MENÚ
 // ============================================================
 
-function volverMenu() {
-
-    mostrarPagina("mainPage");
-
-}
-
+function volverMenu() {mostrarPagina("mainPage");}
 
 // ============================================================
 // MOSTRAR PÁGINA
 // ============================================================
 
 function mostrarPagina(idPagina) {
-
     const paginas =
         document.querySelectorAll(".page");
 
-    paginas.forEach(pagina => {
-
-        pagina.classList.add("hidden");
-
-    });
-
+    paginas.forEach(pagina => {pagina.classList.add("hidden");});
 
     const pagina =
         document.getElementById(idPagina);
-
-    if (pagina) {
-
-        pagina.classList.remove("hidden");
-
-    }
-
+    if (pagina) {pagina.classList.remove("hidden");}
 }
-
-
 
 document.addEventListener(
     "DOMContentLoaded",
     function () {
-
         // Mostrar login al iniciar
-
         mostrarPagina("loginPage");
         cargarDatos();
-
     }
 );
-
-
-
-// Ejecutar al cargar

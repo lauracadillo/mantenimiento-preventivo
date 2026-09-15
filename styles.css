@@ -126,37 +126,25 @@ body {
 
 .btn-login {
     width: 100%;
-
     padding: 14px;
-
     border: none;
-
     border-radius: 8px;
-
     background: #2563eb;
-
     color: white;
-
     font-size: 16px;
-
     font-weight: bold;
-
     cursor: pointer;
-
     transition: 0.2s;
 }
 
 .btn-login:hover {
     background: #1d4ed8;
-
     transform: translateY(-1px);
 }
 
 .login-error {
     color: #dc2626;
-
     margin-top: 15px;
-
     font-size: 14px;
 }
 
@@ -167,25 +155,17 @@ body {
 
 .topbar {
     height: 75px;
-
     background: white;
-
     border-bottom: 1px solid #e5e7eb;
-
     padding: 0 35px;
-
     display: flex;
-
     justify-content: space-between;
-
     align-items: center;
 }
 
 .topbar-title {
     display: flex;
-
     align-items: center;
-
     gap: 12px;
 }
 
@@ -195,26 +175,20 @@ body {
 
 .topbar h2 {
     margin: 0;
-
     font-size: 20px;
 }
 
 .topbar-title span {
     color: #64748b;
-
     font-size: 13px;
 }
 
 .topbar-user {
     display: flex;
-
     align-items: center;
-
     gap: 20px;
-
     font-weight: bold;
 }
-
 
 /* =========================================================
    BOTONES
@@ -222,17 +196,11 @@ body {
 
 .btn-logout {
     border: none;
-
     background: #fee2e2;
-
     color: #b91c1c;
-
     padding: 9px 15px;
-
     border-radius: 7px;
-
     cursor: pointer;
-
     font-weight: bold;
 }
 
@@ -242,17 +210,11 @@ body {
 
 .btn-back {
     border: none;
-
     background: #e5e7eb;
-
     color: #374151;
-
     padding: 10px 16px;
-
     border-radius: 7px;
-
     cursor: pointer;
-
     font-weight: bold;
 }
 
@@ -267,9 +229,7 @@ body {
 
 .main-content {
     max-width: 1200px;
-
     margin: auto;
-
     padding: 45px 30px;
 }
 
@@ -279,7 +239,6 @@ body {
 
 .welcome h1 {
     margin-bottom: 5px;
-
     font-size: 30px;
 }
 
@@ -303,19 +262,12 @@ body {
 
 .module-card {
     position: relative;
-
     background: white;
-
     border-radius: 14px;
-
     padding: 30px;
-
     min-height: 220px;
-
     border: 1px solid #e5e7eb;
-
     cursor: pointer;
-
     transition:
         transform 0.2s,
         box-shadow 0.2s,
@@ -324,27 +276,19 @@ body {
 
 .module-card:hover {
     transform: translateY(-5px);
-
     box-shadow:
         0 15px 30px rgba(0, 0, 0, 0.10);
-
     border-color: #bfdbfe;
 }
 
 .module-icon {
     width: 60px;
     height: 60px;
-
     border-radius: 12px;
-
     display: flex;
-
     align-items: center;
-
     justify-content: center;
-
     font-size: 28px;
-
     margin-bottom: 25px;
 }
 
@@ -362,27 +306,20 @@ body {
 
 .module-content h2 {
     margin: 0 0 10px;
-
     font-size: 20px;
 }
 
 .module-content p {
     margin: 0;
-
     color: #64748b;
-
     line-height: 1.5;
 }
 
 .module-arrow {
     position: absolute;
-
     right: 25px;
-
     bottom: 25px;
-
     font-size: 25px;
-
     color: #2563eb;
 }
 
@@ -393,31 +330,22 @@ body {
 
 .module-header {
     min-height: 75px;
-
     background: white;
-
     border-bottom: 1px solid #e5e7eb;
-
     padding: 12px 30px;
-
     display: flex;
-
     align-items: center;
-
     justify-content: space-between;
-
     gap: 20px;
 }
 
 .module-header h1 {
     margin: 0;
-
     font-size: 22px;
 }
 
 .module-header span {
     color: #64748b;
-
     font-size: 13px;
 }
 
@@ -428,34 +356,22 @@ body {
 
 .empty-module {
     min-height: calc(100vh - 75px);
-
     display: flex;
-
     flex-direction: column;
-
     align-items: center;
-
     justify-content: center;
-
     text-align: center;
 }
 
 .empty-icon {
     width: 90px;
     height: 90px;
-
     display: flex;
-
     align-items: center;
-
     justify-content: center;
-
     background: #e0e7ff;
-
     border-radius: 50%;
-
     font-size: 40px;
-
     margin-bottom: 20px;
 }
 
@@ -474,29 +390,19 @@ body {
 
 .verification-container {
     padding: 30px;
-
     max-width: 1400px;
-
     margin: auto;
 }
 
 .file-upload-card {
     background: white;
-
     border: 1px solid #e5e7eb;
-
     border-radius: 12px;
-
     padding: 20px;
-
     margin-bottom: 20px;
-
     display: flex;
-
     align-items: center;
-
     gap: 25px;
-
     flex-wrap: wrap;
 }
 
@@ -506,23 +412,18 @@ body {
 
 .file-upload-card p {
     margin: 0;
-
     color: #64748b;
-
     font-size: 14px;
 }
 
 .file-upload-card input {
     padding: 10px;
-
     border: 1px solid #d1d5db;
-
     border-radius: 7px;
 }
 
 .file-status {
     font-size: 14px;
-
     font-weight: bold;
 }
 
@@ -533,21 +434,13 @@ body {
 
 .filter-card {
     background: white;
-
     padding: 18px 20px;
-
     border-radius: 12px;
-
     border: 1px solid #e5e7eb;
-
     margin-bottom: 20px;
-
     display: flex;
-
     align-items: center;
-
     gap: 12px;
-
     flex-wrap: wrap;
 }
 
@@ -557,28 +450,21 @@ body {
 
 .filter-card select {
     padding: 10px;
-
     border-radius: 7px;
-
     border: 1px solid #d1d5db;
 }
 
 .btn-primary,
 .btn-secondary {
     padding: 10px 18px;
-
     border: none;
-
     border-radius: 7px;
-
     cursor: pointer;
-
     font-weight: bold;
 }
 
 .btn-primary {
     background: #2563eb;
-
     color: white;
 }
 
@@ -588,7 +474,6 @@ body {
 
 .btn-secondary {
     background: #6b7280;
-
     color: white;
 }
 
@@ -603,38 +488,28 @@ body {
 
 .table-container {
     width: 100%;
-
     overflow-x: auto;
-
     background: white;
-
     border-radius: 12px;
-
     border: 1px solid #e5e7eb;
 }
 
 table {
     width: 100%;
-
     border-collapse: collapse;
-
     font-size: 13px;
 }
 
 thead {
     background: #1e3a5f;
-
     color: white;
 }
 
 th,
 td {
     padding: 10px 12px;
-
     border-bottom: 1px solid #e5e7eb;
-
     text-align: left;
-
     white-space: nowrap;
 }
 
@@ -649,25 +524,19 @@ tbody tr:hover {
 
 .loading {
     padding: 15px;
-
     color: #2563eb;
-
     font-weight: bold;
 }
 
 .error {
     padding: 15px;
-
     color: #dc2626;
-
     font-weight: bold;
 }
 
 .counter {
     margin-bottom: 15px;
-
     color: #64748b;
-
     font-weight: bold;
 }
 

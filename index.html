@@ -147,14 +147,14 @@
 
         <main class="verification-container">
 
-            <!-- CARGAR ARCHIVO -->
+            <!----------------------- CARGAR ARCHIVOS-------------------------------------------------------------------- -->
 
             <div class="file-upload-card">
                 <div>
                     <h3> Archivo MP Autin </h3>
                 </div>
                 <input type="file" id="archivoMPautin"  accept=".xlsx" onchange="cargarArchivo(event, 'preventivo', 'Data Preventivo')">
-                <div id="estado-preventivo" class="file-status"></div>
+                <div id="estado-preventivo" class="archivo-estado"></div>
               </div>
             </div>
 
@@ -163,7 +163,7 @@
                     <h3> Archivo CM Autin </h3>
                 </div>
                 <input type="file" id="archivoCMautin"  accept=".xlsx" onchange="cargarArchivo(event, 'correctivo', 'Data')" >
-                <div id="estado-correctivo" class="file-status"></div>
+                <div id="estado-correctivo" class="archivo-estado"></div>
               </div>
             </div>
 
@@ -173,7 +173,7 @@
                     <p>Descargar hoja "BASE" como CSV</p>
                 </div>
                 <input type="file" id="archivoSWAP"  accept=".csv" onchange="cargarArchivo(event, 'swap')" >
-                <div id="estado-swap" class="file-status"></div>
+                <div id="estado-swap" class="archivo-estado"></div>
               </div>
             </div>
 
@@ -183,10 +183,10 @@
                     
                 </div>
                 <input type="file" id="archivoBlacklist"  accept=".xlsx"  onchange="cargarArchivo(event, 'blacklist', 'Sheet1')">
-                <div id="estado-blacklist" class="file-status"></div>
+                <div id="estado-blacklist" class="archivo-estado"></div>
               </div>
             </div>
-
+            <!---------------------------------------------------------------------------------------------------------------------------------------------------------------->
             <!-- FILTROS -->
 
             <div class="filter-card">
