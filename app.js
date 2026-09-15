@@ -70,7 +70,7 @@ async function cargarDatos() {
         DatosPlan2026 = todosLosRegistros;
 
         // Mostrar todos los datos
-        //mostrarTabla(DatosPlan2026);
+        mostrarTabla(DatosPlan2026);
 
         // Actualizar contador
         const contador = document.getElementById('contadorFilas');
@@ -199,9 +199,7 @@ function cargarArchivo(event, nombreArchivo, nombreHoja) {
 
     const archivo = event.target.files[0];
 
-    if (!archivo) {
-        return;
-    }
+    if (!archivo) { return; }
 
     // ==========================================
     // ESTADO: CARGANDO
@@ -212,15 +210,10 @@ function cargarArchivo(event, nombreArchivo, nombreHoja) {
     estadoArchivos[nombreArchivo].filas = 0;
 
     actualizarEstadoArchivos();
-
     const reader = new FileReader();
-
     reader.onload = function(e) {
-
         try {
-
             let datos = [];
-
             if (
                 archivo.name.toLowerCase().endsWith('.csv')
             ) {
