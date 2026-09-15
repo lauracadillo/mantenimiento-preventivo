@@ -1,57 +1,41 @@
 const SUPABASE_URL = 'https://ugayglaqrwccynrikxvp.supabase.co'
 const SUPABASE_ANON_KEY = 'sb_publishable_OjWWKzcoEuR9rwhCQyiRcA_3gsKbRpA'
-const TablaPlan2026 = 'Plan2026' 
+const TablaPlan2026 = 'Plan2026'
+const TablaSWAP = "SWAP" 
+const TablaBlacklist = "Blacklist"
+
 const COLUMNA_MES = 'mes a ejecutar' 
 const ColsVerificacionMensual = ['Site Id', 'Site Name', 'TipoN', "mes a ejecutar", 'Excluir'] 
 const HojaArchivoMPautin = 'Data Preventivo'
 
 let DatosPlan2026 = []
+let DatosSwap = []
+let DatosBlacklist = []
+
 let datosArchivos = { correctivo: [], preventivo: [],  swap: [],  blacklist: []};
 
 let estadoArchivos = {
     correctivo: {estado: 'pendiente', nombre: '', filas: 0},
-    preventivo: {estado: 'pendiente', nombre: '', filas: 0},
-    swap: {estado: 'pendiente', nombre: '', filas: 0},
-    blacklist: {estado: 'pendiente', nombre: '', filas: 0}
+    preventivo: {estado: 'pendiente', nombre: '', filas: 0}
 };
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 async function cargarDatos() {
     try {
-        console.log('Conectando a tabla:', TablaPlan2026);
         console.log('URL:', SUPABASE_URL);
 
-        const limite = 1000;
-        let todosLosRegistros = [];
-        let desde = 0;
+        const [plan2026, swap, blacklist] = await Promise.all([
+            cargarTablaSupabase(TablaPlan2026),
+            cargarTablaSupabase(TablaSWAP),
+            cargarTablaSupabase(TablaBlacklist)
+        ]);
 
-        while (true) {
+        DatosPlan2026 = plan2026;
+        DatosSwap = swap;
+        DatosBlacklist = blacklist;
 
-            const { data, error } = await supabaseClient
-                .from(TablaPlan2026)
-                .select('*')
-                .range(desde, desde + limite - 1);
-
-            if (error) {
-                throw new Error(`Error Supabase: ${error.message}`);
-            }
-
-            if (!data || data.length === 0) {
-                break;
-            }
-
-            todosLosRegistros = todosLosRegistros.concat(data);
-
-            // Si llegaron menos de 1000, ya no hay más registros
-            if (data.length < limite) {
-                break;
-            }
-
-            desde += limite;
-        }
-
-        if (todosLosRegistros.length === 0) {
+        if (DatosPlan2026.length === 0) {
             document.getElementById('error').innerHTML =
                 `<div class="error">
                     No hay datos en la tabla "${TablaPlan2026}"<br>
@@ -65,17 +49,16 @@ async function cargarDatos() {
             return;
         }
 
-        // Guardar TODOS los datos
-        DatosPlan2026 = todosLosRegistros;
-
-        // Mostrar todos los datos
         mostrarTabla(DatosPlan2026);
 
-        // Actualizar contador
         const contador = document.getElementById('contadorFilas');
         if (contador) {
             contador.textContent = `Mostrando ${DatosPlan2026.length} filas`;
         }
+
+        console.log(`Plan2026: ${DatosPlan2026.length} filas`);
+        console.log(`SWAP: ${DatosSwap.length} filas`);
+        console.log(`Blacklist: ${DatosBlacklist.length} filas`);
 
     } catch (err) {
         console.error('Error completo:', err);
@@ -89,8 +72,6 @@ async function cargarDatos() {
         document.getElementById('loading').style.display = 'none';
     }
 }
-
-
 function mostrarTabla(datos) {
     document.getElementById('loading').style.display = 'none'
     document.getElementById('tabla').style.display = 'table'
@@ -421,14 +402,12 @@ function actualizarEstadoArchivos() {
 
 function verificarExclusión(siteId, tipo) {
     
-    // Tipos que aplican para exclusión por swap
     const TIPOS_SWAP = ["B_1", "B_2", "B_3"];
     
-    // Crear mapa de swap indexado por "Site Id"y
-    console.log(datosArchivos.swap)
-    
+    console.log(DatosSwap)
+
     const swap_map = {};
-    datosArchivos.swap.forEach(fila => {
+    DatosSwap.forEach(fila => {
         const siteIdKey = fila["CODIGO UNICO"]?.toString();
         if (siteIdKey) {
             swap_map[siteIdKey] = {
@@ -438,7 +417,6 @@ function verificarExclusión(siteId, tipo) {
         }
     });
     
-    // Verificar si el Site Id está en el mapa Y el tipo está en TIPOS_SWAP
     const siteIdStr = siteId?.toString();
     
     if (!swap_map[siteIdStr] || !TIPOS_SWAP.includes(tipo?.toString())) {
@@ -448,27 +426,22 @@ function verificarExclusión(siteId, tipo) {
         };
     }
     
-    // Obtener valores de swap
     const swap_real = swap_map[siteIdStr]["SWAP RAN REAL"];
     const despliegue = swap_map[siteIdStr]["Despliegue"];
     
-    // Validar y parsear fecha de SWAP RAN REAL
-    let fecha = despliegue; // Por defecto usar Despliegue
+    let fecha = despliegue;
     
     if (swap_real && swap_real.trim() !== "") {
         try {
             const fecha_ts = new Date(swap_real);
             
-            // Verificar si es una fecha válida y no es "00:00:00"
             if (!isNaN(fecha_ts.getTime()) && swap_real !== "00:00:00") {
-                // Formatear como dd/mm/yyyy
                 const day = String(fecha_ts.getDate()).padStart(2, '0');
                 const month = String(fecha_ts.getMonth() + 1).padStart(2, '0');
                 const year = fecha_ts.getFullYear();
                 fecha = `${day}/${month}/${year}`;
             }
         } catch (e) {
-            // Si hay error al parsear, usar Despliegue
             fecha = despliegue;
         }
     }
