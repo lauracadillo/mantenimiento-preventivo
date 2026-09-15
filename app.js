@@ -12,7 +12,7 @@ let DatosPlan2026 = []
 let DatosSwap = []
 let DatosBlacklist = []
 
-let datosArchivos = { correctivo: [], preventivo: [],  swap: [],  blacklist: []};
+let datosArchivos = { correctivo: [], preventivo: []};
 
 let estadoArchivos = {
     correctivo: {estado: 'pendiente', nombre: '', filas: 0},
@@ -124,7 +124,6 @@ function mostrarTabla(datos) {
         return
     }
     
-
     // Encabezados
     const columnas = ColsVerificacionMensual
     const encabezados = document.getElementById('encabezados')
@@ -141,10 +140,9 @@ function mostrarTabla(datos) {
         columnas.forEach(col => {
             const td = document.createElement('td')
             // Logica especial para columna "Excluir"
-            // Logica especial para columna "Excluir"
             if (col === 'Excluir') {
                 const siteId = fila['Site Id'];
-                const tipo = fila['TipoN']; // ⭐ Pasar el tipo aquí
+                const tipo = fila['TipoN']; 
                 const estado = verificarExclusión(siteId, tipo);
                 
                 td.textContent = estado.motivo;
@@ -438,14 +436,38 @@ function actualizarEstadoArchivos() {
 // ============================================================
 
 function verificarExclusión(siteId, tipo) {
+    /**
+     * Verifica si un Site ID con su tipo aplica para exclusión por SWAP
+     * También verifica si está en BLACKLIST
+     * Lógica equivalente al código Python: get_swap_value()
+     */
     
+    // Tipos que aplican para exclusión por swap
     const TIPOS_SWAP = ["B_1", "B_2", "B_3"];
+    const siteIdStr = siteId?.toString();
     
-    console.log(DatosSwap)
-
+    // ==========================================
+    // VERIFICAR BLACKLIST PRIMERO
+    // ==========================================
+    const enBlacklist = datosArchivos.blacklist.some(fila => {
+        return fila['CU']?.toString() === siteIdStr;
+    });
+    
+    if (enBlacklist) {
+        return {
+            excluir: true,
+            motivo: 'Blacklist'
+        };
+    }
+    
+    // ==========================================
+    // VERIFICAR SWAP
+    // ==========================================
+    
+    // Crear mapa de swap indexado por "Site Id"
     const swap_map = {};
-    DatosSwap.forEach(fila => {
-        const siteIdKey = fila["CODIGO UNICO"]?.toString();
+    datosArchivos.swap.forEach(fila => {
+        const siteIdKey = fila["Site Id"]?.toString();
         if (siteIdKey) {
             swap_map[siteIdKey] = {
                 "SWAP RAN REAL": fila["SWAP RAN REAL"],
@@ -454,8 +476,7 @@ function verificarExclusión(siteId, tipo) {
         }
     });
     
-    const siteIdStr = siteId?.toString();
-    
+    // Verificar si el Site Id está en el mapa Y el tipo está en TIPOS_SWAP
     if (!swap_map[siteIdStr] || !TIPOS_SWAP.includes(tipo?.toString())) {
         return {
             excluir: false,
@@ -463,22 +484,27 @@ function verificarExclusión(siteId, tipo) {
         };
     }
     
+    // Obtener valores de swap
     const swap_real = swap_map[siteIdStr]["SWAP RAN REAL"];
     const despliegue = swap_map[siteIdStr]["Despliegue"];
     
-    let fecha = despliegue;
+    // Validar y parsear fecha de SWAP RAN REAL
+    let fecha = despliegue; // Por defecto usar Despliegue
     
     if (swap_real && swap_real.trim() !== "") {
         try {
             const fecha_ts = new Date(swap_real);
             
+            // Verificar si es una fecha válida y no es "00:00:00"
             if (!isNaN(fecha_ts.getTime()) && swap_real !== "00:00:00") {
+                // Formatear como dd/mm/yyyy
                 const day = String(fecha_ts.getDate()).padStart(2, '0');
                 const month = String(fecha_ts.getMonth() + 1).padStart(2, '0');
                 const year = fecha_ts.getFullYear();
                 fecha = `${day}/${month}/${year}`;
             }
         } catch (e) {
+            // Si hay error al parsear, usar Despliegue
             fecha = despliegue;
         }
     }
