@@ -435,6 +435,10 @@ function actualizarEstadoArchivos() {
 // FUNCIÓN AUXILIAR: Verificar estado de exclusión por SWAP
 // ============================================================
 
+// ============================================================
+// FUNCIÓN AUXILIAR: Verificar estado de exclusión por SWAP y BLACKLIST
+// ============================================================
+
 function verificarExclusión(siteId, tipo) {
     /**
      * Verifica si un Site ID con su tipo aplica para exclusión por SWAP
@@ -449,15 +453,19 @@ function verificarExclusión(siteId, tipo) {
     // ==========================================
     // VERIFICAR BLACKLIST PRIMERO
     // ==========================================
-    const enBlacklist = datosArchivos.blacklist.some(fila => {
-        return fila['CU']?.toString() === siteIdStr;
-    });
-    
-    if (enBlacklist) {
-        return {
-            excluir: true,
-            motivo: 'Blacklist'
-        };
+    if (datosArchivos.blacklist && Array.isArray(datosArchivos.blacklist)) {
+        const enBlacklist = datosArchivos.blacklist.some(fila => {
+            return fila['Site Id']?.toString() === siteIdStr ||
+                   fila['SiteId']?.toString() === siteIdStr ||
+                   fila['site id']?.toString() === siteIdStr;
+        });
+        
+        if (enBlacklist) {
+            return {
+                excluir: true,
+                motivo: 'Blacklist'
+            };
+        }
     }
     
     // ==========================================
@@ -466,21 +474,24 @@ function verificarExclusión(siteId, tipo) {
     
     // Crear mapa de swap indexado por "Site Id"
     const swap_map = {};
-    datosArchivos.swap.forEach(fila => {
-        const siteIdKey = fila["Site Id"]?.toString();
-        if (siteIdKey) {
-            swap_map[siteIdKey] = {
-                "SWAP RAN REAL": fila["SWAP RAN REAL"],
-                "Despliegue": fila["Despliegue"]
-            };
-        }
-    });
+    
+    if (datosArchivos.swap && Array.isArray(datosArchivos.swap)) {
+        datosArchivos.swap.forEach(fila => {
+            const siteIdKey = fila["Site Id"]?.toString();
+            if (siteIdKey) {
+                swap_map[siteIdKey] = {
+                    "SWAP RAN REAL": fila["SWAP RAN REAL"],
+                    "Despliegue": fila["Despliegue"]
+                };
+            }
+        });
+    }
     
     // Verificar si el Site Id está en el mapa Y el tipo está en TIPOS_SWAP
     if (!swap_map[siteIdStr] || !TIPOS_SWAP.includes(tipo?.toString())) {
         return {
             excluir: false,
-            motivo: "No"
+            motivo: "-"
         };
     }
     
