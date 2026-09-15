@@ -455,9 +455,7 @@ function verificarExclusión(siteId, tipo) {
     // ==========================================
     if (datosArchivos.blacklist && Array.isArray(datosArchivos.blacklist)) {
         const enBlacklist = datosArchivos.blacklist.some(fila => {
-            return fila['Site Id']?.toString() === siteIdStr ||
-                   fila['SiteId']?.toString() === siteIdStr ||
-                   fila['site id']?.toString() === siteIdStr;
+            return fila['CU']?.toString() === siteIdStr;
         });
         
         if (enBlacklist) {
@@ -477,7 +475,7 @@ function verificarExclusión(siteId, tipo) {
     
     if (datosArchivos.swap && Array.isArray(datosArchivos.swap)) {
         datosArchivos.swap.forEach(fila => {
-            const siteIdKey = fila["Site Id"]?.toString();
+            const siteIdKey = fila["CODIGO UNICO"]?.toString();
             if (siteIdKey) {
                 swap_map[siteIdKey] = {
                     "SWAP RAN REAL": fila["SWAP RAN REAL"],
@@ -525,6 +523,7 @@ function verificarExclusión(siteId, tipo) {
         motivo: `Sí (${fecha})`
     };
 }
+
 // ============================================================
 // LOGIN
 // ============================================================
