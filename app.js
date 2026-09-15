@@ -427,7 +427,7 @@ function verificarExclusión(siteId, tipo) {
     // Crear mapa de swap indexado por "Site Id"
     const swap_map = {};
     datosArchivos.swap.forEach(fila => {
-        const siteIdKey = fila["Site Id"]?.toString();
+        const siteIdKey = fila["CODIGO UNICO"]?.toString();
         if (siteIdKey) {
             swap_map[siteIdKey] = {
                 "SWAP RAN REAL": fila["SWAP RAN REAL"],
