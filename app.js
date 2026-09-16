@@ -87,7 +87,6 @@ async function cargarDatos() {
             return;
         }
 
-        // ⭐ AGREGAR ESTAS LÍNEAS
         asignarColumnasEjecucion();
         
         mostrarTabla(DatosPlan2026);
@@ -145,23 +144,32 @@ function mostrarTabla(datos) {
         const tr = document.createElement('tr')
         columnas.forEach(col => {
             const td = document.createElement('td')
-            // Logica especial para columna "Excluir"
+            
+            // Aplicar estilos especiales para columnas
             if (col === 'Excluir') {
-                const siteId = fila['Site Id'];
-                const tipo = fila['TipoN']; 
-                const estado = verificarExclusión(siteId, tipo);
+                const valor = fila[col] || '-';
+                td.textContent = valor;
                 
-                td.textContent = estado.motivo;
-                
-                // Aplicar estilos si está excluido (Sí)
-                if (estado.excluir) {
+                // Aplicar estilos si está excluido
+                if (valor !== '-') {
                     td.style.backgroundColor = '#ffebee';
                     td.style.color = '#c62828';
+                    td.style.fontWeight = 'bold';
+                }
+            } else if (col === 'revision') {
+                const valor = fila[col] || '';
+                td.textContent = valor;
+                
+                // Aplicar estilos si hay revisión
+                if (valor.includes("Excluir")) {
+                    td.style.backgroundColor = '#fff3e0';
+                    td.style.color = '#e65100';
                     td.style.fontWeight = 'bold';
                 }
             } else {
                 td.textContent = fila[col] || '-'
             }
+            
             tr.appendChild(td)
         })
         tbody.appendChild(tr)
@@ -169,7 +177,6 @@ function mostrarTabla(datos) {
 
     document.getElementById('error').innerHTML = ''
 }
-
 
 function aplicarFiltro() {
     const mesFiltro = document.getElementById('filtroMes').value;
@@ -526,8 +533,7 @@ function filtrarPorTaskStatus(datos) {
 
 function asignarColumnasEjecucion() {
     /**
-     * Asigna las columnas: ultimo_mp, ultimo_mc, cantidad_mc, revision
-     * Crea mapas y los asigna a DatosPlan2026
+     * Asigna las columnas: ultimo_mp, ultimo_mc, cantidad_mc, swap, Excluir, revision
      */
     
     // ==========================================
@@ -570,6 +576,7 @@ function asignarColumnasEjecucion() {
     // ==========================================
     DatosPlan2026.forEach(fila => {
         const siteId = fila["Site Id"]?.toString();
+        const tipo = fila["TipoN"];
         
         // Último MP (con fallback a SIOM)
         if (ultimo_mp[siteId]) {
@@ -586,7 +593,16 @@ function asignarColumnasEjecucion() {
         // Cantidad de MC
         fila["cantidad_mc"] = cantidad_mc[siteId] || 0;
         
-        // ⭐ AGREGAR COLUMNA DE REVISIÓN
+        const estadoExclusión = verificarExclusión(siteId, tipo);
+        fila["Excluir"] = estadoExclusión.motivo;
+        
+        // Si tiene SWAP, mostrar "Sí (fecha)", sino "No"
+        if (estadoExclusión.excluir && estadoExclusión.motivo.includes("SWAP")) {
+            fila["swap"] = estadoExclusión.motivo.replace("SWAP ", "Sí ");
+        } else {
+            fila["swap"] = "No";
+        }
+        
         fila["revision"] = get_revision(fila);
     });
     
@@ -595,7 +611,6 @@ function asignarColumnasEjecucion() {
     console.log("Último MC:", Object.keys(ultimo_mc).length, "sitios");
     console.log("Cantidad MC:", Object.keys(cantidad_mc).length, "sitios");
 }
-
 // ============================================================
 // FUNCIÓN AUXILIAR: Verificar revisión y exclusiones
 // ============================================================
