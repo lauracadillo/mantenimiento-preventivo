@@ -588,12 +588,12 @@ function asignarColumnasEjecucion() {
         // Cantidad de MC
         fila["cantidad_mc"] = cantidad_mc[siteId] || 0;
         
-        const estadoExclusión = verificarExclusión(siteId, tipo);
-        fila["Excluir"] = estadoExclusión.motivo;
+        const estadoExclusion = verificarExclusión(siteId, tipo);
+        fila["Excluir"] = estadoExclusion.motivo;
         
         // Si tiene SWAP, mostrar "Sí (fecha)", sino "No"
-        if (estadoExclusión.excluir && estadoExclusión.motivo.includes("SWAP")) {
-            fila["swap"] = estadoExclusión.motivo.replace("SWAP ", "SWAP ");
+        if (estadoExclusion.excluir && estadoExclusion.motivo.includes("SWAP")) {
+            fila["swap"] = estadoExclusion.motivo;
         } else {
             fila["swap"] = "No";
         }
@@ -627,32 +627,38 @@ function get_revision(fila) {
     // ==========================================
 
     const swap_val = fila["swap"] || "";
-    const swap_str = swap_val.toString();
+    const swap_str = swap_val.toString().trim();
 
-    const tiene_swap_2025 =
-        !swap_str.includes("No") &&
-        swap_str.includes("2025");
+    if (swap_str !== "" && swap_str !== "No") {
 
-    const tiene_swap_2026 =
-        !swap_str.includes("No") &&
-        swap_str.includes("2026");
+        // Extraer el año de la fecha del SWAP
+        const match_year = swap_str.match(/(\d{4})/);
 
+        if (match_year) {
 
-    if (tiene_swap_2025) {
+            const swap_year = parseInt(match_year[1]);
 
-        const cantidad_mc = fila["cantidad_mc"] || 0;
+            // ==========================================
+            // SWAP 2025
+            // ==========================================
 
-        if (cantidad_mc < 2) {
-            return "Excluir - SWAP2025";
-        } else {
-            return "";
+            if (swap_year === 2025) {
+
+                const cantidad_mc = Number(fila["cantidad_mc"]) || 0;
+
+                if (cantidad_mc < 2) {
+                    return "Excluir - SWAP2025";
+                }
+            }
+
+            // ==========================================
+            // SWAP 2026
+            // ==========================================
+
+            if (swap_year === 2026) {
+                return "Excluir - SWAP2026";
+            }
         }
-    }
-
-
-    // v2 > excluir siempre si se le realizó el swap 2026
-    if (tiene_swap_2026) {
-        return "Excluir - SWAP2026";
     }
 
 
