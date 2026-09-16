@@ -544,7 +544,7 @@ function asignarColumnasEjecucion() {
     
     const ultimo_mp = crearMapaUltimo(
         preventivosEjecutados,
-        "2_MES_PROGRA",
+        "Complete Time",
         "Site Id"
     );
     
@@ -656,7 +656,7 @@ function get_revision(fila) {
     // 3. VERIFICAR FRECUENCIA vs ÚLTIMO MP
     // ==========================================
     const ultimo_mp_str = fila["ultimo_mp"];
-    const frecuencia = fila["frecuencia "] || fila["frecuencia"]; // Por si tiene o no espacio
+    const frecuencia = fila["Frecuencia "] || fila["Frecuencia"]; // Por si tiene o no espacio
     const mes_plan = fila["MES_PROGRA"] || fila["mes a ejecutar"];
     
     if (ultimo_mp_str && 
