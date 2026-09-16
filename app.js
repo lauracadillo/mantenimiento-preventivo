@@ -611,101 +611,169 @@ function asignarColumnasEjecucion() {
 // ============================================================
 
 function get_revision(fila) {
-    /**
-     * Determina si la fila debe ser excluida y el motivo
-     * Equivalente a: df_plan["revision"] = df_plan.apply(get_revision, axis=1)
-     */
-    
+
     // ==========================================
     // 1. VERIFICAR BLACKLIST
     // ==========================================
+
     const excluir = fila["Excluir"];
+
     if (excluir === "Blacklist") {
         return "Excluir - Blacklist";
     }
-    
+
     // ==========================================
     // 2. VERIFICAR SWAP
     // ==========================================
-    const swap_val = fila["swap"] || fila["swap"] || "";
+
+    const swap_val = fila["swap"] || "";
     const swap_str = swap_val.toString();
-    
-    const tiene_swap_2025 = !swap_str.includes("No") && swap_str.includes("2025");
-    const tiene_swap_2026 = !swap_str.includes("No") && swap_str.includes("2026");
-    
+
+    const tiene_swap_2025 =
+        !swap_str.includes("No") &&
+        swap_str.includes("2025");
+
+    const tiene_swap_2026 =
+        !swap_str.includes("No") &&
+        swap_str.includes("2026");
+
+
     if (tiene_swap_2025) {
+
         const cantidad_mc = fila["cantidad_mc"] || 0;
+
         if (cantidad_mc < 2) {
             return "Excluir - SWAP2025";
         } else {
             return "";
         }
     }
-    
-    // v2> excluir siempre si se le realizó el swap 2026
+
+
+    // v2 > excluir siempre si se le realizó el swap 2026
     if (tiene_swap_2026) {
         return "Excluir - SWAP2026";
     }
-    
+
+
     // ==========================================
-    // 3. VERIFICAR FRECUENCIA vs ÚLTIMO MP
+    // 3. VERIFICAR FRECUENCIA VS ÚLTIMO MP
     // ==========================================
+
     const ultimo_mp_str = fila["ultimo_mp"];
-    const frecuencia = fila["Frecuencia"]; 
-    const mes_plan = fila["MES_PROGRA"] || fila["mes a ejecutar"];
-    
-    if (ultimo_mp_str && 
-        ultimo_mp_str !== "Sin registro" && 
-        frecuencia && 
-        mes_plan) {
-        
+    const frecuencia = fila["Frecuencia"];
+    const mes_plan = fila["MES_PROGRA"] ?? fila["mes a ejecutar"];
+
+
+    if (
+        ultimo_mp_str &&
+        ultimo_mp_str !== "Sin registro" &&
+        frecuencia &&
+        mes_plan !== null &&
+        mes_plan !== undefined &&
+        mes_plan !== ""
+    ) {
+
         try {
+
+            // ==========================================
             // Parsear último_mp (formato dd/mm/yyyy)
-            const partes_ultimo_mp = ultimo_mp_str.split("/");
+            // ==========================================
+
+            const partes_ultimo_mp = ultimo_mp_str.toString().split("/");
+
             if (partes_ultimo_mp.length === 3) {
+
                 const ultimo_mp_dt = new Date(
                     parseInt(partes_ultimo_mp[2]),
                     parseInt(partes_ultimo_mp[1]) - 1,
                     parseInt(partes_ultimo_mp[0])
                 );
-                
-                // Parsear mes_plan (puede ser ISO o dd/mm/yyyy)
+
+
+                // ==========================================
+                // Parsear mes_plan
+                // ==========================================
+
                 let mes_plan_dt;
-                if (mes_plan.includes("-")) {
+
+                // Convertir a string para poder usar includes()
+                const mes_plan_str = mes_plan.toString();
+
+
+                if (mes_plan_str.includes("-")) {
+
                     // Formato ISO: YYYY-MM-DD
-                    mes_plan_dt = new Date(mes_plan);
-                } else if (mes_plan.includes("/")) {
+                    mes_plan_dt = new Date(mes_plan_str);
+
+                } else if (mes_plan_str.includes("/")) {
+
                     // Formato: dd/mm/yyyy
-                    const partes_mes = mes_plan.split("/");
+                    const partes_mes = mes_plan_str.split("/");
+
                     mes_plan_dt = new Date(
                         parseInt(partes_mes[2]),
                         parseInt(partes_mes[1]) - 1,
                         parseInt(partes_mes[0])
                     );
+
                 } else {
-                    // Asumir que es un número de mes (ej: "3" para marzo)
-                    const year = new Date().getFullYear();
-                    mes_plan_dt = new Date(year, parseInt(mes_plan) - 1, 1);
+
+                    // ==========================================
+                    // Número de mes: 1 = enero, 12 = diciembre
+                    // Planificación 2026
+                    // ==========================================
+
+                    const mes_num = parseInt(mes_plan);
+
+                    mes_plan_dt = new Date(
+                        2026,
+                        mes_num - 1,
+                        1
+                    );
                 }
-                
+
+                // ==========================================
                 // Calcular meses transcurridos
-                const meses_transcurridos = 
+                // ==========================================
+
+                const meses_transcurridos =
                     (mes_plan_dt.getFullYear() - ultimo_mp_dt.getFullYear()) * 12 +
                     (mes_plan_dt.getMonth() - ultimo_mp_dt.getMonth());
-                
-                // Calcular intervalo en meses
+
+
+                // ==========================================
+                // Calcular intervalo según frecuencia
+                // ==========================================
+
                 const frecuencia_num = parseInt(frecuencia);
+
                 const intervalo_meses = 12 / frecuencia_num;
-                
+
+
+                // ==========================================
+                // Verificar frecuencia
+                // ==========================================
+
                 if (meses_transcurridos < intervalo_meses) {
                     return "Excluir - Frecuencia";
                 }
             }
+
         } catch (error) {
-            console.error("Error en cálculo de frecuencia:", error);
+
+            console.error(
+                "Error en cálculo de frecuencia:",
+                error,
+                "mes_plan:",
+                mes_plan,
+                "ultimo_mp:",
+                ultimo_mp_str
+            );
         }
     }
-    
+
+
     return "";
 }
 // ============================================================
