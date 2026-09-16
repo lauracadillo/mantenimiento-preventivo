@@ -61,7 +61,7 @@ async function cargarDatos() {
     try {
         console.log('URL:', SUPABASE_URL);
 
-        const [plan2026, swap, blacklist] = await Promise.all([
+        const [plan2026, swap, blacklist, SIOM] = await Promise.all([
             cargarTablaSupabase(TablaPlan2026),
             cargarTablaSupabase(TablaSWAP),
             cargarTablaSupabase(TablaBlacklist),
