@@ -7,7 +7,7 @@ const TablaSIOM = "SIOM"
 
 const COLUMNA_MES = 'mes a ejecutar' 
 const COLUMNA_SITE_ID = 'Site Id' 
-const ColsVerificacionMensual = ['Site Id', 'Site Name', 'TipoN', "mes a ejecutar", "Frecuencia", 'ultimo_mp', 'ultimo_mc', 'cantidad_mc', 'revision'] 
+const ColsVerificacionMensual = ['Site Id', 'Site Name', 'TipoN', "mes a ejecutar","swap",  "Frecuencia", 'ultimo_mp', 'ultimo_mc', 'cantidad_mc', "Exclusion", 'revision'] 
 const HojaArchivoMPautin = 'Data Preventivo'
 
 let DatosPlan2026 = []
