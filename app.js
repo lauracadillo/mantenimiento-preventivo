@@ -542,34 +542,19 @@ function asignarColumnasEjecucion() {
     const preventivosEjecutados = filtrarPorTaskStatus(datosArchivos.preventivo || []);
     const correctivosEjecutados = filtrarPorTaskStatus(datosArchivos.correctivo || []);
     
-    const ultimo_mp = crearMapaUltimo(
-        preventivosEjecutados,
-        "Complete Time",
-        "Site Id"
-    );
+    const ultimo_mp = crearMapaUltimo( preventivosEjecutados, "Complete Time", "Site Id");
     
     // ==========================================
     // PROCESAR SIOM (fallback)
     // ==========================================
-    const ultimo_mp_siom = crearMapaUltimo(
-        DatosSIOM,
-        "Fecha ejecución MNT",
-        "Site Id"
-    );
+    const ultimo_mp_siom = crearMapaUltimo( DatosSIOM, "Fecha ejecución MNT", "CodUnico" );
     
     // ==========================================
     // PROCESAR CORRECTIVOS
     // ==========================================
-    const ultimo_mc = crearMapaUltimo(
-        correctivosEjecutados,
-        "Complete Time",
-        "Site Id"
-    );
+    const ultimo_mc = crearMapaUltimo( correctivosEjecutados, "Complete Time", "Site Id" );
     
-    const cantidad_mc = contarPorSiteId(
-        correctivosEjecutados,
-        "Site Id"
-    );
+    const cantidad_mc = contarPorSiteId( correctivosEjecutados, "Site Id" );
     
     // ==========================================
     // ASIGNAR VALORES A CADA FILA
