@@ -1,7 +1,7 @@
 const SUPABASE_URL = 'https://ugayglaqrwccynrikxvp.supabase.co'
 const SUPABASE_ANON_KEY = 'sb_publishable_OjWWKzcoEuR9rwhCQyiRcA_3gsKbRpA'
 const TablaPlan2026 = 'Plan2026'
-const TablaSWAP = "SWAP" 
+ 
 const TablaBlacklist = "Blacklist"
 const TablaSIOM = "SIOM"
 
@@ -11,15 +11,15 @@ const ColsVerificacionMensual = ['Site Id', 'Site Name', 'TipoN', "mes a ejecuta
 const HojaArchivoMPautin = 'Data Preventivo'
 
 let DatosPlan2026 = []
-let DatosSwap = []
 let DatosBlacklist = []
 let DatosSIOM =[]
 
-let datosArchivos = { correctivo: [], preventivo: []};
+let datosArchivos = { correctivo: [], preventivo: [], swap:[]};
 
 let estadoArchivos = {
     correctivo: {estado: 'pendiente', nombre: '', filas: 0},
-    preventivo: {estado: 'pendiente', nombre: '', filas: 0}
+    preventivo: {estado: 'pendiente', nombre: '', filas: 0},
+    swap: {estado: 'pendiente', nombre: '', filas: 0}
 };
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
@@ -62,15 +62,13 @@ async function cargarDatos() {
     try {
         console.log('URL:', SUPABASE_URL);
 
-        const [plan2026, swap, blacklist, SIOM] = await Promise.all([
+        const [plan2026, blacklist, SIOM] = await Promise.all([
             cargarTablaSupabase(TablaPlan2026),
-            cargarTablaSupabase(TablaSWAP),
             cargarTablaSupabase(TablaBlacklist),
             cargarTablaSupabase(TablaSIOM)
         ]);
 
         DatosPlan2026 = plan2026;
-        DatosSwap = swap;
         DatosBlacklist = blacklist;
         DatosSIOM = SIOM;
 
@@ -98,7 +96,6 @@ async function cargarDatos() {
         }
 
         console.log(`Plan2026: ${DatosPlan2026.length} filas`);
-        console.log(`SWAP: ${DatosSwap.length} filas`);
         console.log(`Blacklist: ${DatosBlacklist.length} filas`);
         console.log(`SIOM: ${DatosSIOM.length} filas`);
 
@@ -815,8 +812,8 @@ function verificarExclusión(siteId, tipo) {
     // Crear mapa de swap indexado por "Site Id"
     const swap_map = {};
     
-    if (DatosSwap && Array.isArray(DatosSwap)) {
-        DatosSwap.forEach(fila => {
+    if (datosArchivos.swap && Array.isArray(datosArchivos.swap)) {
+        datosArchivos.swap.forEach(fila => {
             const siteIdKey = fila["CODIGO UNICO"]?.toString();
             if (siteIdKey) {
                 swap_map[siteIdKey] = {
