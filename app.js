@@ -6,6 +6,7 @@ const TablaBlacklist = "Blacklist"
 const TablaSIOM = "SIOM"
 
 const COLUMNA_MES = 'mes a ejecutar' 
+const COLUMNA_SITEID = 'Site Id' 
 const ColsVerificacionMensual = ['Site Id', 'Site Name', 'TipoN', "mes a ejecutar", "Frecuencia", 'ultimo_mp', 'ultimo_mc', 'cantidad_mc', 'revision'] 
 const HojaArchivoMPautin = 'Data Preventivo'
 
@@ -180,24 +181,40 @@ function mostrarTabla(datos) {
 
 function aplicarFiltro() {
     const mesFiltro = document.getElementById('filtroMes').value;
+    const siteIdFiltro = document.getElementById('filtroSiteId').value.trim().toLowerCase();
 
     console.log("Total datos recibidos:", DatosPlan2026.length);
-    console.log("Filtro seleccionado:", mesFiltro);
+    console.log("Filtro mes:", mesFiltro, "| Filtro Site ID:", siteIdFiltro);
 
-    if (!mesFiltro) {
+    if (!mesFiltro && !siteIdFiltro) {
         console.log("Mostrando todos:", DatosPlan2026.length);
         asignarColumnasEjecucion();
         mostrarTabla(DatosPlan2026);
+        document.getElementById('error').innerHTML = '';
+        document.getElementById('contadorFilas').textContent =
+            `Mostrando ${DatosPlan2026.length} filas`;
         return;
     }
 
-    const datosFiltrados = DatosPlan2026.filter(fila => {
-        const mes = fila[COLUMNA_MES];
+    let datosFiltrados = DatosPlan2026;
 
-        return mes !== null &&
-               mes !== undefined &&
-               Number(mes) === Number(mesFiltro);
-    });
+    if (mesFiltro) {
+        datosFiltrados = datosFiltrados.filter(fila => {
+            const mes = fila[COLUMNA_MES];
+            return mes !== null &&
+                   mes !== undefined &&
+                   Number(mes) === Number(mesFiltro);
+        });
+    }
+
+    if (siteIdFiltro) {
+        datosFiltrados = datosFiltrados.filter(fila => {
+            const siteId = fila[COLUMNA_SITE_ID];
+            return siteId !== null &&
+                   siteId !== undefined &&
+                   String(siteId).toLowerCase().includes(siteIdFiltro);
+        });
+    }
 
     console.log("Filas encontradas:", datosFiltrados.length);
     console.log("Datos filtrados:", datosFiltrados);
@@ -205,8 +222,9 @@ function aplicarFiltro() {
     if (datosFiltrados.length === 0) {
         document.getElementById('tabla').style.display = 'none';
         document.getElementById('error').innerHTML =
-            `<div class="error"> No hay mantenimientos programados para el mes ${mesFiltro}</div>`;
+            `<div class="error"> No hay mantenimientos que coincidan con los filtros aplicados</div>`;
     } else {
+        document.getElementById('error').innerHTML = '';
         asignarColumnasEjecucion();
         mostrarTabla(datosFiltrados);
     }
@@ -215,17 +233,19 @@ function aplicarFiltro() {
         `Mostrando ${datosFiltrados.length} filas`;
 }
 
-
 // Limpiar filtro
 function limpiarFiltro() {
-    document.getElementById('filtroMes').value = ''
-    document.getElementById('error').innerHTML = ''
-    mostrarTabla(DatosPlan2026)
+    document.getElementById('filtroMes').value = '';
+    document.getElementById('filtroSiteId').value = '';
+    document.getElementById('error').innerHTML = '';
+    asignarColumnasEjecucion();
+    mostrarTabla(DatosPlan2026);
+    document.getElementById('contadorFilas').textContent =
+        `Mostrando ${DatosPlan2026.length} filas`;
 }
 
-// document.getElementById('archivoPMautin').addEventListener('change', (event) => {cargarArchivo(event, 'Data Preventivo');});
-// document.getElementById('archivoCMautin').addEventListener('change', (event) => {cargarArchivo(event, 'Data');});
 
+// Funcion para cargar archivos externos 
 function cargarArchivo(event, nombreArchivo, nombreHoja) {
 
     const archivo = event.target.files[0];
@@ -352,10 +372,8 @@ function cargarArchivo(event, nombreArchivo, nombreHoja) {
     };
 
     reader.onerror = function() {
-
         estadoArchivos[nombreArchivo].estado = 'error';
         actualizarEstadoArchivos();
-
     };
 
     if (
@@ -543,15 +561,7 @@ function asignarColumnasEjecucion() {
     const correctivosEjecutados = filtrarPorTaskStatus(datosArchivos.correctivo || []);
     
     const ultimo_mp = crearMapaUltimo( preventivosEjecutados, "Complete Time", "Site Id");
-    
-    // ==========================================
-    // PROCESAR SIOM (fallback)
-    // ==========================================
     const ultimo_mp_siom = crearMapaUltimo( DatosSIOM, "Fecha ejecución MNT", "CodUnico" );
-    
-    // ==========================================
-    // PROCESAR CORRECTIVOS
-    // ==========================================
     const ultimo_mc = crearMapaUltimo( correctivosEjecutados, "Complete Time", "Site Id" );
     
     const cantidad_mc = contarPorSiteId( correctivosEjecutados, "Site Id" );
@@ -583,7 +593,7 @@ function asignarColumnasEjecucion() {
         
         // Si tiene SWAP, mostrar "Sí (fecha)", sino "No"
         if (estadoExclusión.excluir && estadoExclusión.motivo.includes("SWAP")) {
-            fila["swap"] = estadoExclusión.motivo.replace("SWAP ", "Sí ");
+            fila["swap"] = estadoExclusión.motivo.replace("SWAP ", "SWAP ");
         } else {
             fila["swap"] = "No";
         }
@@ -641,7 +651,7 @@ function get_revision(fila) {
     // 3. VERIFICAR FRECUENCIA vs ÚLTIMO MP
     // ==========================================
     const ultimo_mp_str = fila["ultimo_mp"];
-    const frecuencia = fila["Frecuencia "] || fila["Frecuencia"]; // Por si tiene o no espacio
+    const frecuencia = fila["Frecuencia"]; 
     const mes_plan = fila["MES_PROGRA"] || fila["mes a ejecutar"];
     
     if (ultimo_mp_str && 
