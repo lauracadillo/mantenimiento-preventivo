@@ -87,6 +87,9 @@ async function cargarDatos() {
             return;
         }
 
+        // ⭐ AGREGAR ESTAS LÍNEAS
+        asignarColumnasEjecucion();
+        
         mostrarTabla(DatosPlan2026);
 
         const contador = document.getElementById('contadorFilas');
@@ -111,7 +114,6 @@ async function cargarDatos() {
         document.getElementById('loading').style.display = 'none';
     }
 }
-
 
 function mostrarTabla(datos) {
     document.getElementById('loading').style.display = 'none'
@@ -177,6 +179,7 @@ function aplicarFiltro() {
 
     if (!mesFiltro) {
         console.log("Mostrando todos:", DatosPlan2026.length);
+        asignarColumnasEjecucion();
         mostrarTabla(DatosPlan2026);
         return;
     }
@@ -197,6 +200,7 @@ function aplicarFiltro() {
         document.getElementById('error').innerHTML =
             `<div class="error"> No hay mantenimientos programados para el mes ${mesFiltro}</div>`;
     } else {
+        asignarColumnasEjecucion();
         mostrarTabla(datosFiltrados);
     }
 
@@ -530,6 +534,7 @@ function asignarColumnasEjecucion() {
     // FILTRAR Y PROCESAR PREVENTIVOS
     // ==========================================
     const preventivosEjecutados = filtrarPorTaskStatus(datosArchivos.preventivo || []);
+    const correctivosEjecutados = filtrarPorTaskStatus(datosArchivos.correctivo || []);
     
     const ultimo_mp = crearMapaUltimo(
         preventivosEjecutados,
@@ -541,7 +546,7 @@ function asignarColumnasEjecucion() {
     // PROCESAR SIOM (fallback)
     // ==========================================
     const ultimo_mp_siom = crearMapaUltimo(
-        DatosPlan2026,
+        DatosSIOM,
         "Fecha ejecución MNT",
         "Site Id"
     );
@@ -550,13 +555,13 @@ function asignarColumnasEjecucion() {
     // PROCESAR CORRECTIVOS
     // ==========================================
     const ultimo_mc = crearMapaUltimo(
-        datosArchivos.correctivo || [],
+        correctivosEjecutados,
         "Complete Time",
         "Site Id"
     );
     
     const cantidad_mc = contarPorSiteId(
-        datosArchivos.correctivo || [],
+        correctivosEjecutados,
         "Site Id"
     );
     
