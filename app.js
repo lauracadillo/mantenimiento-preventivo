@@ -837,30 +837,41 @@ function verificarExclusión(siteId, tipo) {
     const despliegue = swap_map[siteIdStr]["Despliegue"];
     
     // Validar y parsear fecha de SWAP RAN REAL
+    // Validar y parsear fecha de SWAP RAN REAL
     let fecha = despliegue; // Por defecto usar Despliegue
-    
-    if (swap_real && swap_real.trim() !== "") {
+
+    if (swap_real !== null && swap_real !== undefined && swap_real !== "") {
         try {
-            const fecha_ts = new Date(swap_real);
-            
-            // Verificar si es una fecha válida y no es "00:00:00"
-            if (!isNaN(fecha_ts.getTime()) && swap_real !== "00:00:00") {
-                // Formatear como dd/mm/yyyy
+            let fecha_ts;
+
+            if (swap_real instanceof Date) {
+                fecha_ts = swap_real;
+            } else {
+                const swap_real_str = String(swap_real).trim();
+
+                if (swap_real_str !== "" && swap_real_str !== "00:00:00") {
+                    fecha_ts = new Date(swap_real_str);
+                }
+            }
+
+            // Verificar si es una fecha válida
+            if (fecha_ts && !isNaN(fecha_ts.getTime())) {
                 const day = String(fecha_ts.getDate()).padStart(2, '0');
                 const month = String(fecha_ts.getMonth() + 1).padStart(2, '0');
                 const year = fecha_ts.getFullYear();
                 fecha = `${day}/${month}/${year}`;
             }
         } catch (e) {
-            // Si hay error al parsear, usar Despliegue
+            console.warn("Error al parsear SWAP RAN REAL:", swap_real, e);
             fecha = despliegue;
         }
     }
-    
+
     return {
         excluir: true,
         motivo: `SWAP (${fecha})`
     };
+
 }
 
 // ============================================================
