@@ -6,7 +6,7 @@ const TablaBlacklist = "Blacklist"
 const TablaSIOM = "SIOM"
 
 const COLUMNA_MES = 'mes a ejecutar' 
-const COLUMNA_SITEID = 'Site Id' 
+const COLUMNA_SITE_ID = 'Site Id' 
 const ColsVerificacionMensual = ['Site Id', 'Site Name', 'TipoN', "mes a ejecutar", "Frecuencia", 'ultimo_mp', 'ultimo_mc', 'cantidad_mc', 'revision'] 
 const HojaArchivoMPautin = 'Data Preventivo'
 
