@@ -18,7 +18,8 @@ let datosArchivos = { correctivo: [], preventivo: [], swap:[], blacklist:[]};
 let estadoArchivos = {
     correctivo: {estado: 'pendiente', nombre: '', filas: 0},
     preventivo: {estado: 'pendiente', nombre: '', filas: 0},
-    swap: {estado: 'pendiente', nombre: '', filas: 0}
+    swap: {estado: 'pendiente', nombre: '', filas: 0}, 
+    blacklist: {estado: 'pendiente', nombre: '', filas: 0} 
 };
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
