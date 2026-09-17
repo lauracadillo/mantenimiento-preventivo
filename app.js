@@ -837,7 +837,6 @@ function verificarExclusión(siteId, tipo) {
     const despliegue = swap_map[siteIdStr]["Despliegue"];
     
     // Validar y parsear fecha de SWAP RAN REAL
-    // Validar y parsear fecha de SWAP RAN REAL
     let fecha = despliegue; // Por defecto usar Despliegue
 
     if (swap_real !== null && swap_real !== undefined && swap_real !== "") {
@@ -845,12 +844,30 @@ function verificarExclusión(siteId, tipo) {
             let fecha_ts;
 
             if (swap_real instanceof Date) {
+                // Ya es un objeto Date
                 fecha_ts = swap_real;
+
+            } else if (typeof swap_real === "number") {
+                // Número serial de Excel (ej: 45660)
+                const parsed = XLSX.SSF.parse_date_code(swap_real);
+                if (parsed) {
+                    fecha_ts = new Date(parsed.y, parsed.m - 1, parsed.d);
+                }
+
             } else {
+                // String de texto
                 const swap_real_str = String(swap_real).trim();
 
                 if (swap_real_str !== "" && swap_real_str !== "00:00:00") {
-                    fecha_ts = new Date(swap_real_str);
+                    // Si el string es puramente numérico, también es un serial de Excel
+                    if (/^\d+(\.\d+)?$/.test(swap_real_str)) {
+                        const parsed = XLSX.SSF.parse_date_code(parseFloat(swap_real_str));
+                        if (parsed) {
+                            fecha_ts = new Date(parsed.y, parsed.m - 1, parsed.d);
+                        }
+                    } else {
+                        fecha_ts = new Date(swap_real_str);
+                    }
                 }
             }
 
@@ -871,6 +888,7 @@ function verificarExclusión(siteId, tipo) {
         excluir: true,
         motivo: `SWAP (${fecha})`
     };
+
 
 }
 
