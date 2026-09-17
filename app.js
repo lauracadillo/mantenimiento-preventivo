@@ -387,78 +387,63 @@ function cargarArchivo(event, nombreArchivo, nombreHoja) {
 }
 
 function actualizarEstadoArchivos() {
-    Object.entries(estadoArchivos).forEach(
-        ([nombre, info]) => {
-            const estado =
-                document.getElementById(
-                    `estado-${nombre}`
-                );
-            const card =
-                document.getElementById(
-                    `card-${nombre}`
-                );
-            if (!estado || !card) {
-                return;
-            }
-            // Limpiar clases
-            card.classList.remove(
-                'cargando',
-                'cargado',
-                'error'
-            );
-            if (info.estado === 'pendiente') {
-                estado.innerHTML = `⚪ Pendiente`;
-            }
-
-            // ==========================================
-            // CARGANDO
-            // ==========================================
-            else if (info.estado === 'cargando') {
-
-                card.classList.add('cargando');
-
-                estado.innerHTML =
-                    `<span class="estado-cargando">
-                        🔄 Cargando...
-                    </span>`;
-            }
-
-            // ==========================================
-            // CARGADO
-            // ==========================================
-
-            else if (info.estado === 'cargado') {
-
-                card.classList.add('cargado');
-
-                estado.innerHTML =
-                    `<span class="estado-cargado">
-                        ✅ Cargado
-                    </span>
-                    <div class="nombre-archivo">
-                        ${info.nombre}<br>
-                        ${info.filas.toLocaleString()} filas
-                    </div>`;
-            }
-
-
-            // ==========================================
-            // ERROR
-            // ==========================================
-
-            else if (info.estado === 'error') {
-                card.classList.add('error');
-                estado.innerHTML =
-                    `<span class="estado-error">
-                        ❌ Error al cargar
-                    </span>
-                    <div class="nombre-archivo">
-                        ${info.nombre}
-                    </div>`;
-            }
-
+    console.log("📋 Actualizando estado de archivos:", estadoArchivos);
+    
+    Object.entries(estadoArchivos).forEach(([nombre, info]) => {
+        const estado = document.getElementById(`estado-${nombre}`);
+        const card = document.getElementById(`card-${nombre}`);
+        
+        // ⚠️ DEBUG: Mostrar si los elementos existen
+        if (!estado) {
+            console.warn(`⚠️ No encontrado: #estado-${nombre}`);
+            return;
         }
-    );
+        if (!card) {
+            console.warn(`⚠️ No encontrado: #card-${nombre}`);
+            return;
+        }
+        
+        // Limpiar clases previas
+        card.classList.remove('pendiente', 'cargando', 'cargado', 'error');
+        
+        // ==========================================
+        // PENDIENTE
+        // ==========================================
+        if (info.estado === 'pendiente') {
+            card.classList.add('pendiente');
+            estado.innerHTML = `⚪ Pendiente`;
+        }
+        // ==========================================
+        // CARGANDO
+        // ==========================================
+        else if (info.estado === 'cargando') {
+            card.classList.add('cargando');
+            estado.innerHTML = `<span class="estado-cargando">🔄 Cargando...</span>`;
+        }
+        // ==========================================
+        // CARGADO
+        // ==========================================
+        else if (info.estado === 'cargado') {
+            card.classList.add('cargado');
+            estado.innerHTML = `
+                <span class="estado-cargado">✅ Cargado</span>
+                <div class="nombre-archivo">
+                    ${info.nombre}<br>
+                    ${info.filas.toLocaleString()} filas
+                </div>`;
+        }
+        // ==========================================
+        // ERROR
+        // ==========================================
+        else if (info.estado === 'error') {
+            card.classList.add('error');
+            estado.innerHTML = `
+                <span class="estado-error">❌ Error al cargar</span>
+                <div class="nombre-archivo">${info.nombre}</div>`;
+        }
+        
+        console.log(`✅ Actualizado ${nombre}: ${info.estado}`);
+    });
 }
 
 // ============================================================

@@ -589,62 +589,67 @@ tbody tr:hover {
 
 }
 
-.archivos-container {
-    display: flex;
-    gap: 15px;
-    flex-wrap: wrap;
-    margin: 15px 0;
-}
+/* ============================================
+   ESTADOS DE ARCHIVOS
+   ============================================ */
 
-.archivo-card {
-    border: 1px solid #ddd;
-    border-radius: 8px;
+.file-upload-card {
     padding: 15px;
-    min-width: 250px;
-    background: #fff;
+    border-radius: 8px;
+    border: 2px solid #ddd;
+    margin: 15px 0;
     transition: all 0.3s ease;
+    background-color: #f9f9f9;
 }
 
-.archivo-card.cargando {
-    border-color: #f0ad4e;
-    background: #fff8e8;
+.file-upload-card.pendiente {
+    background-color: #f5f5f5;
+    border-color: #999;
 }
 
-.archivo-card.cargado {
-    border-color: #28a745;
-    background: #f0fff4;
+.file-upload-card.cargando {
+    background-color: #e3f2fd;
+    border-color: #2196F3;
+    animation: pulse 1s infinite;
 }
 
-.archivo-card.error {
-    border-color: #dc3545;
-    background: #fff5f5;
+.file-upload-card.cargado {
+    background-color: #e8f5e9;
+    border-color: #4caf50;
+    border-width: 2px;
 }
 
-.archivo-titulo {
-    font-weight: bold;
-    font-size: 16px;
-    margin-bottom: 6px;
+.file-upload-card.error {
+    background-color: #ffebee;
+    border-color: #f44336;
 }
 
 .archivo-estado {
+    font-weight: 600;
+    margin-top: 10px;
     font-size: 14px;
-    margin-bottom: 10px;
 }
 
 .estado-cargando {
-    color: #d68910;
+    color: #1976d2;
 }
 
 .estado-cargado {
-    color: #218838;
+    color: #388e3c;
 }
 
 .estado-error {
-    color: #c82333;
+    color: #d32f2f;
 }
 
 .nombre-archivo {
     font-size: 12px;
     color: #666;
     margin-top: 5px;
+    font-weight: normal;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
 }
