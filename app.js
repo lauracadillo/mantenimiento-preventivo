@@ -2,13 +2,11 @@ const SUPABASE_URL = 'https://ugayglaqrwccynrikxvp.supabase.co'
 const SUPABASE_ANON_KEY = 'sb_publishable_OjWWKzcoEuR9rwhCQyiRcA_3gsKbRpA'
 
 const TablaPlan2026 = 'Plan2026'
- 
-const TablaBlacklist = "Blacklist"
 const TablaSIOM = "SIOM"
 
 const COLUMNA_MES = 'mes a ejecutar' 
 const COLUMNA_SITE_ID = 'Site Id' 
-const ColsVerificacionMensual = ['Site Id', 'Site Name', 'TipoN', "mes a ejecutar","swap",  "Frecuencia", 'ultimo_mp', 'ultimo_mc', 'cantidad_mc', "Exclusion", 'revision'] 
+const ColsVerificacionMensual = ['Site Id', 'Site Name', 'TipoN', "mes a ejecutar","swap",  "Frecuencia", 'ultimo_mp', 'ultimo_mc', 'cantidad_mc',  'revision'] 
 
 let DatosPlan2026 = []
 let DatosSIOM =[]
@@ -384,21 +382,11 @@ function cargarArchivo(event, nombreArchivo, nombreHoja) {
 }
 
 function actualizarEstadoArchivos() {
-    console.log("📋 Actualizando estado de archivos:", estadoArchivos);
+    console.log("Actualizando estado de archivos:", estadoArchivos);
     
     Object.entries(estadoArchivos).forEach(([nombre, info]) => {
         const estado = document.getElementById(`estado-${nombre}`);
         const card = document.getElementById(`card-${nombre}`);
-        
-        // ⚠️ DEBUG: Mostrar si los elementos existen
-        if (!estado) {
-            console.warn(`⚠️ No encontrado: #estado-${nombre}`);
-            return;
-        }
-        if (!card) {
-            console.warn(`⚠️ No encontrado: #card-${nombre}`);
-            return;
-        }
         
         // Limpiar clases previas
         card.classList.remove('pendiente', 'cargando', 'cargado', 'error');
@@ -439,7 +427,7 @@ function actualizarEstadoArchivos() {
                 <div class="nombre-archivo">${info.nombre}</div>`;
         }
         
-        console.log(`✅ Actualizado ${nombre}: ${info.estado}`);
+        console.log(`Actualizado ${nombre}: ${info.estado}`);
     });
 }
 
