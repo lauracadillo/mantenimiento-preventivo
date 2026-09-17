@@ -1,5 +1,6 @@
 const SUPABASE_URL = 'https://ugayglaqrwccynrikxvp.supabase.co'
 const SUPABASE_ANON_KEY = 'sb_publishable_OjWWKzcoEuR9rwhCQyiRcA_3gsKbRpA'
+
 const TablaPlan2026 = 'Plan2026'
  
 const TablaBlacklist = "Blacklist"
@@ -8,13 +9,11 @@ const TablaSIOM = "SIOM"
 const COLUMNA_MES = 'mes a ejecutar' 
 const COLUMNA_SITE_ID = 'Site Id' 
 const ColsVerificacionMensual = ['Site Id', 'Site Name', 'TipoN', "mes a ejecutar","swap",  "Frecuencia", 'ultimo_mp', 'ultimo_mc', 'cantidad_mc', "Exclusion", 'revision'] 
-const HojaArchivoMPautin = 'Data Preventivo'
 
 let DatosPlan2026 = []
-let DatosBlacklist = []
 let DatosSIOM =[]
 
-let datosArchivos = { correctivo: [], preventivo: [], swap:[]};
+let datosArchivos = { correctivo: [], preventivo: [], swap:[], blacklist:[]};
 
 let estadoArchivos = {
     correctivo: {estado: 'pendiente', nombre: '', filas: 0},
@@ -62,14 +61,12 @@ async function cargarDatos() {
     try {
         console.log('URL:', SUPABASE_URL);
 
-        const [plan2026, blacklist, SIOM] = await Promise.all([
+        const [plan2026,  SIOM] = await Promise.all([
             cargarTablaSupabase(TablaPlan2026),
-            cargarTablaSupabase(TablaBlacklist),
             cargarTablaSupabase(TablaSIOM)
         ]);
 
         DatosPlan2026 = plan2026;
-        DatosBlacklist = blacklist;
         DatosSIOM = SIOM;
 
         if (DatosPlan2026.length === 0) {
@@ -96,7 +93,6 @@ async function cargarDatos() {
         }
 
         console.log(`Plan2026: ${DatosPlan2026.length} filas`);
-        console.log(`Blacklist: ${DatosBlacklist.length} filas`);
         console.log(`SIOM: ${DatosSIOM.length} filas`);
 
     } catch (err) {
@@ -777,8 +773,8 @@ function verificarExclusión(siteId, tipo) {
     // ==========================================
     // VERIFICAR BLACKLIST PRIMERO
     // ==========================================
-    if (DatosBlacklist && Array.isArray(DatosBlacklist)) {
-        const enBlacklist = DatosBlacklist.some(fila => {
+    if (datosArchivos.blacklist && Array.isArray(datosArchivos.blacklist)) {
+        const enBlacklist = datosArchivos.blacklist.some(fila => {
             return fila['CU']?.toString() === siteIdStr;
         });
         

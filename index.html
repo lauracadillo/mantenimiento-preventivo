@@ -176,6 +176,15 @@
                 <div id="estado-swap" class="archivo-estado"></div>
             </div>
 
+            <!------------ Blacklist ------------>
+            <div id="card-blacklist" class="file-upload-card">
+                <div>
+                    <h3> Archivo Blacklist </h3>
+                </div>
+                <input type="file" id="archivoBlacklist" accept=".xlsx" onchange="cargarArchivo(event, 'blacklist', 'Sheet1')">
+                <div id="estado-blacklist" class="archivo-estado"></div>
+            </div>
+
             
             <!---------------------------------------------------------------------------------------------------------------------------------------------------------------->
             <!-- FILTROS -->
