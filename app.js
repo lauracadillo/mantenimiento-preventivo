@@ -10,6 +10,7 @@ const ColsVerificacionMensual = ['Site Id', 'Site Name', 'TipoN', "mes a ejecuta
 
 let DatosPlan2026 = []
 let DatosSIOM =[]
+let DatosMostrados =[]
 
 let datosArchivos = { correctivo: [], preventivo: [], swap:[], blacklist:[]};
 
@@ -119,9 +120,10 @@ function mostrarTabla(datos) {
         document.getElementById('tabla').style.display = 'none'
         document.getElementById('error').innerHTML = 
             `<div class="error"> No hay registros para mostrar</div>`
-        return
+            DatosMostrados = [];
+            return
     }
-    
+    DatosMostrados = datos
     // Encabezados
     const columnas = ColsVerificacionMensual
     const encabezados = document.getElementById('encabezados')
@@ -235,6 +237,32 @@ function limpiarFiltro() {
     document.getElementById('contadorFilas').textContent =
         `Mostrando ${DatosPlan2026.length} filas`;
 }
+
+
+
+function descargarDatosMostrados() {
+    if (!DatosMostrados || DatosMostrados.length === 0) {
+        alert('No hay datos para descargar.');
+        return;
+    }
+
+    // Reconstruir filas exactamente con las columnas visibles en la tabla
+    const filasExportar = DatosMostrados.map(fila => {
+        const filaExportar = {};
+        ColsVerificacionMensual.forEach(col => {
+            filaExportar[col] = fila[col] ?? '-';
+        });
+        return filaExportar;
+    });
+
+    const hoja = XLSX.utils.json_to_sheet(filasExportar);
+    const libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, hoja, 'Verificación mensual');
+
+    const fecha = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(libro, `verificacion_mensual_${fecha}.xlsx`);
+}
+
 
 
 // Funcion para cargar archivos externos 

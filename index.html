@@ -178,21 +178,21 @@
 
         <main class="verification-container">
 
-            <p class="section-label">Archivos fuente</p>
+            <p class="section-label">Cargar archivos para proceder con la verificación del plan mensual</p>
 
             <div class="upload-grid">
 
                 <!------------ PREVENTIVO ------------>
                 <div id="card-preventivo" class="file-upload-card">
-                    <h3>Archivo MP Autin</h3>
-                    <p>Reporte de mantenimiento preventivo exportado de Autin.</p>
+                    <h3>Mantenimiento Preventivo</h3>
+                    <p>Reporte de Mantenimiento preventivo exportado de Autin.</p>
                     <input type="file" id="archivoMPautin" accept=".xlsx" onchange="cargarArchivo(event, 'preventivo', 'Data Preventivo')">
                     <div id="estado-preventivo" class="archivo-estado"></div>
                 </div>
 
                 <!------------ CORRECTIVO ------------>
                 <div id="card-correctivo" class="file-upload-card">
-                    <h3>Archivo CM Autin</h3>
+                    <h3>Mantenimiento Correctivo</h3>
                     <p>Reporte de mantenimiento correctivo exportado de Autin.</p>
                     <input type="file" id="archivoCMautin" accept=".xlsx" onchange="cargarArchivo(event, 'correctivo', 'Data')">
                     <div id="estado-correctivo" class="archivo-estado"></div>
@@ -201,7 +201,7 @@
                 <!------------ SWAP ------------>
                 <div id="card-swap" class="file-upload-card">
                     <h3>Archivo SWAP</h3>
-                    <p>Base de equipos en proceso de swap.</p>
+                    <p>Descargar desde el <a href="https://integratelcorp-my.sharepoint.com/:x:/r/personal/peter_durand_integratel_com_pe/_layouts/15/Doc.aspx?sourcedoc=%7B4ED8FA29-BCCA-4B27-810A-B82A496236B2%7D&file=REPORTE%20SWAPS%20EJECUTADOS%20NEW.xlsm&action=default&mobileredirect=true&DefaultItemOpen=1&web=1">enlace</a></p>
                     <input type="file" id="archivoSWAP" accept=".xlsm" onchange="cargarArchivo(event, 'swap', 'BASE')">
                     <div id="estado-swap" class="archivo-estado"></div>
                 </div>
@@ -209,7 +209,7 @@
                 <!------------ Blacklist ------------>
                 <div id="card-blacklist" class="file-upload-card">
                     <h3>Archivo Blacklist</h3>
-                    <p>Sitios excluidos del plan de mantenimiento.</p>
+                    <p>Descargar reporte desde <a href="https://integrateloperaciones.github.io/WebAccesos/">Reportinc</a>  </p>
                     <input type="file" id="archivoBlacklist" accept=".xlsx" onchange="cargarArchivo(event, 'blacklist', 'Sheet1')">
                     <div id="estado-blacklist" class="archivo-estado"></div>
                 </div>
@@ -242,6 +242,7 @@
 
                 <button class="btn-primary" onclick="aplicarFiltro()">Filtrar</button>
                 <button class="btn-secondary" onclick="limpiarFiltro()">Limpiar</button>
+                <button class="btn-secondary" onclick="descargarDatosMostrados()">Descargar Plan Revisado</button>
             </div>
 
             <!-- ESTADO -->
