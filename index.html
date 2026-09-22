@@ -273,20 +273,52 @@
 
         <header class="module-header">
             <button class="btn-back" onclick="volverMenu()">Volver al menú</button>
-            <h1>Reprogramación</h1>
+            <div>
+                <h1>Reprogramación</h1>
+                <span class="module-sub">Reprogramar un sitio a otro mes del plan</span>
+            </div>
             <button class="btn-logout" onclick="cerrarSesion()">Cerrar sesión</button>
         </header>
 
-        <main class="empty-module">
-            <div class="empty-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="4" y="5" width="16" height="15" rx="1.5"></rect>
-                    <path d="M4 9.5h16M8 3v4M16 3v4"></path>
-                    <circle cx="12" cy="14.5" r="1.2" fill="currentColor" stroke="none"></circle>
-                </svg>
+        <main class="verification-container">
+
+            <p class="section-label">
+                Ingresa el Site ID y el mes al que deseas reprogramarlo. Se validará contra
+                Blacklist y SWAP antes de agregarlo al Plan2026.
+            </p>
+
+            <div class="filter-card">
+                <label for="reprogSiteId">Site ID:</label>
+                <input type="text" id="reprogSiteId" placeholder="Ej: SITE001">
+
+                <label for="reprogMes">Mes a reprogramar:</label>
+                <select id="reprogMes">
+                    <option value="">-- Selecciona un mes --</option>
+                    <option value="1">Enero</option>
+                    <option value="2">Febrero</option>
+                    <option value="3">Marzo</option>
+                    <option value="4">Abril</option>
+                    <option value="5">Mayo</option>
+                    <option value="6">Junio</option>
+                    <option value="7">Julio</option>
+                    <option value="8">Agosto</option>
+                    <option value="9">Septiembre</option>
+                    <option value="10">Octubre</option>
+                    <option value="11">Noviembre</option>
+                    <option value="12">Diciembre</option>
+                </select>
+
+                <button class="btn-primary" onclick="verificarReprogramacion()">Verificar</button>
             </div>
-            <h2>Módulo de Reprogramación</h2>
-            <p>Este módulo estará disponible próximamente.</p>
+
+            <div id="reprogResultado"></div>
+
+            <div id="reprogConfirmacion" class="filter-card hidden">
+                <p>¿Confirmas agregar este sitio al Plan2026 con los datos mostrados arriba?</p>
+                <button class="btn-primary" onclick="confirmarReprogramacion()">Confirmar</button>
+                <button class="btn-secondary" onclick="cancelarReprogramacion()">Cancelar</button>
+            </div>
+
         </main>
     </section>
 

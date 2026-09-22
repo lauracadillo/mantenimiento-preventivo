@@ -739,18 +739,18 @@ tbody tr:hover {
 }
 
 .loading::before {
-    content: "";
+    /* content: ""; */
     width: 14px;
     height: 14px;
     border-radius: 50%;
     border: 2px solid var(--signal-dim);
     border-top-color: var(--signal);
-    animation: spin 0.7s linear infinite;
+    /* animation: spin 0.7s linear infinite; */
 }
 
-.loading img {
+/* .loading img {
     display: none;
-}
+} */
 
 .error {
     padding: 12px 16px;

@@ -3,6 +3,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_OjWWKzcoEuR9rwhCQyiRcA_3gsKbRpA'
 
 const TablaPlan2026 = 'Plan2026'
 const TablaSIOM = "SIOM"
+const TablaBaseSitios = "Base de Sitios"
 
 const COLUMNA_MES = 'mes a ejecutar' 
 const COLUMNA_SITE_ID = 'Site Id' 
@@ -10,6 +11,7 @@ const ColsVerificacionMensual = ['Site Id', 'Site Name', 'TipoN', "mes a ejecuta
 
 let DatosPlan2026 = []
 let DatosSIOM =[]
+let DatosBaseSitios =[]
 let DatosMostrados =[]
 
 let datosArchivos = { correctivo: [], preventivo: [], swap:[], blacklist:[]};
@@ -61,13 +63,15 @@ async function cargarDatos() {
     try {
         console.log('URL:', SUPABASE_URL);
 
-        const [plan2026,  SIOM] = await Promise.all([
+        const [plan2026,  SIOM, BaseSitios] = await Promise.all([
             cargarTablaSupabase(TablaPlan2026),
-            cargarTablaSupabase(TablaSIOM)
+            cargarTablaSupabase(TablaSIOM),
+            cargarTablaSupabase(TablaBaseSitios)
         ]);
 
         DatosPlan2026 = plan2026;
         DatosSIOM = SIOM;
+        DatosBaseSitios = BaseSitios;
 
         if (DatosPlan2026.length === 0) {
             document.getElementById('error').innerHTML =
@@ -92,8 +96,9 @@ async function cargarDatos() {
             contador.textContent = `Mostrando ${DatosPlan2026.length} filas`;
         }
 
-        console.log(`Plan2026: ${DatosPlan2026.length} filas`);
-        console.log(`SIOM: ${DatosSIOM.length} filas`);
+        // console.log(`Plan2026: ${DatosPlan2026.length} filas`);
+        // console.log(`SIOM: ${DatosSIOM.length} filas`);
+        // console.log(`SIOM: ${DatosSIOM.length} filas`);
 
     } catch (err) {
         console.error('Error completo:', err);
@@ -175,12 +180,18 @@ function mostrarTabla(datos) {
 
 function aplicarFiltro() {
     const mesFiltro = document.getElementById('filtroMes').value;
-    const siteIdFiltro = document.getElementById('filtroSiteId').value.trim().toLowerCase();
+    const siteIdFiltroRaw = document.getElementById('filtroSiteId').value.trim();
+
+    // Parsear múltiples Site IDs separados por comas
+    const siteIdsFiltro = siteIdFiltroRaw
+        .split(',')
+        .map(id => id.trim().toLowerCase())
+        .filter(id => id !== ''); // Eliminar strings vacíos
 
     console.log("Total datos recibidos:", DatosPlan2026.length);
-    console.log("Filtro mes:", mesFiltro, "| Filtro Site ID:", siteIdFiltro);
+    console.log("Filtro mes:", mesFiltro, "| Filtros Site ID:", siteIdsFiltro);
 
-    if (!mesFiltro && !siteIdFiltro) {
+    if (!mesFiltro && siteIdsFiltro.length === 0) {
         console.log("Mostrando todos:", DatosPlan2026.length);
         asignarColumnasEjecucion();
         mostrarTabla(DatosPlan2026);
@@ -201,12 +212,14 @@ function aplicarFiltro() {
         });
     }
 
-    if (siteIdFiltro) {
+    if (siteIdsFiltro.length > 0) {
         datosFiltrados = datosFiltrados.filter(fila => {
             const siteId = fila[COLUMNA_SITE_ID];
             return siteId !== null &&
                    siteId !== undefined &&
-                   String(siteId).toLowerCase().includes(siteIdFiltro);
+                   siteIdsFiltro.some(filtroId => 
+                       String(siteId).toLowerCase().includes(filtroId)
+                   );
         });
     }
 
@@ -982,5 +995,3 @@ document.addEventListener(
         cargarDatos();
     }
 );
-
-
