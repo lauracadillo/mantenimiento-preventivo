@@ -8,6 +8,15 @@ const TablaBaseSitios = "Base de Sitios"
 const COLUMNA_MES = 'mes a ejecutar' 
 const COLUMNA_SITE_ID = 'Site Id' 
 const ColsVerificacionMensual = ['Site Id', 'Site Name', 'TipoN', "mes a ejecutar","swap",  "Frecuencia", 'ultimo_mp', 'ultimo_mc', 'cantidad_mc',  'revision'] 
+const ColumnasBaseSitios = {
+    siteId: 'Codigo Unico',
+    siteName: 'Nombre Local',
+    tipo: 'Tipo Local' // AGREGAR EN LA BASE DE SUPABASE LA FRECUENCIA DE CADA SITIO !!!
+};
+
+// Sitio validado, en espera de confirmación del usuario, para el módulo de Reprogramación.
+let sitioPendienteReprogramacion = null;
+
 
 let DatosPlan2026 = []
 let DatosSIOM =[]
