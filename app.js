@@ -903,6 +903,157 @@ function verificarExclusión(siteId, tipo) {
 
 }
 
+
+
+// ============================================================
+// REPROGRAMACIÓN
+// ============================================================
+
+function buscarSitioEnBaseSitios(siteId) {
+    /**
+     * Busca un Site Id dentro de la tabla "Base de Sitios" (ya cargada en DatosBaseSitios).
+     * Comparación case-insensitive y sin espacios extra.
+     */
+    const siteIdStr = siteId?.toString().trim().toLowerCase();
+
+    if (!siteIdStr) return null;
+
+    return DatosBaseSitios.find(fila => {
+        const id = fila[ColumnasBaseSitios.siteId]?.toString().trim().toLowerCase();
+        return id === siteIdStr;
+    }) || null;
+}
+
+function verificarReprogramacion() {
+    /**
+     * Paso 1 del flujo de reprogramación:
+     * - Busca el sitio en la Base de Sitios (obtiene TipoN y Frecuencia)
+     * - Corre el mismo chequeo de Blacklist / SWAP que usa Verificación mensual
+     * - Si es excluible -> alerta y no se puede continuar
+     * - Si es reprogramable -> muestra resumen y pide confirmación al usuario
+     */
+
+    const resultadoDiv = document.getElementById('reprogResultado');
+    const confirmacionDiv = document.getElementById('reprogConfirmacion');
+
+    resultadoDiv.innerHTML = '';
+    confirmacionDiv.classList.add('hidden');
+    sitioPendienteReprogramacion = null;
+
+    const siteIdInput = document.getElementById('reprogSiteId').value.trim();
+    const mesInput = document.getElementById('reprogMes').value;
+
+    if (!siteIdInput) {
+        resultadoDiv.innerHTML = `<div class="error">Ingresa un Site ID.</div>`;
+        return;
+    }
+
+    if (!mesInput) {
+        resultadoDiv.innerHTML = `<div class="error">Selecciona el mes a reprogramar.</div>`;
+        return;
+    }
+
+    // Los filtros de Blacklist y SWAP dependen de los archivos cargados
+    // en el módulo de Verificación mensual (misma sesión / misma página).
+    if (!datosArchivos.blacklist || datosArchivos.blacklist.length === 0 ||
+        !datosArchivos.swap || datosArchivos.swap.length === 0) {
+        resultadoDiv.innerHTML =
+            `<div class="error">
+                Primero carga los archivos de Blacklist y SWAP en el módulo
+                "Verificación mensual" para poder validar la reprogramación.
+            </div>`;
+        return;
+    }
+
+    const sitio = buscarSitioEnBaseSitios(siteIdInput);
+
+    if (!sitio) {
+        resultadoDiv.innerHTML =
+            `<div class="error">El Site ID "${siteIdInput}" no se encontró en la Base de Sitios.</div>`;
+        return;
+    }
+
+    const tipo = sitio[ColumnasBaseSitios.tipo];
+    const frecuencia = sitio[ColumnasBaseSitios.frecuencia];
+    const siteName = sitio[ColumnasBaseSitios.siteName] || '-';
+    const siteIdReal = sitio[ColumnasBaseSitios.siteId];
+
+    const verificacion = verificarExclusión(siteIdReal, tipo);
+
+    if (verificacion.excluir) {
+        alert(`No es posible reprogramar este sitio.\nMotivo: ${verificacion.motivo}`);
+        resultadoDiv.innerHTML =
+            `<div class="error">Sitio excluido — Motivo: ${verificacion.motivo}</div>`;
+        return;
+    }
+
+    // Sitio válido: se guarda como pendiente hasta que el usuario confirme
+    sitioPendienteReprogramacion = {
+        "Site Id": siteIdReal,
+        "Site Name": siteName,
+        "TipoN": tipo,
+        "Frecuencia": frecuencia,
+        "mes a ejecutar": Number(mesInput),
+        "swap": "No"
+    };
+
+    const nombresMes = ["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+    resultadoDiv.innerHTML = `
+        <div class="reprog-info">
+            <p><strong>Site ID:</strong> ${siteIdReal}</p>
+            <p><strong>Site Name:</strong> ${siteName}</p>
+            <p><strong>Tipo:</strong> ${tipo || '-'}</p>
+            <p><strong>Frecuencia:</strong> ${frecuencia || '-'}</p>
+            <p><strong>Mes a reprogramar:</strong> ${nombresMes[Number(mesInput)] || mesInput}</p>
+        </div>`;
+
+    confirmacionDiv.classList.remove('hidden');
+}
+
+async function confirmarReprogramacion() {
+    /**
+     * Paso 2 del flujo: el usuario aceptó el resumen mostrado.
+     * Inserta la nueva fila en la tabla Plan2026 en Supabase.
+     */
+
+    if (!sitioPendienteReprogramacion) return;
+
+    const resultadoDiv = document.getElementById('reprogResultado');
+    const confirmacionDiv = document.getElementById('reprogConfirmacion');
+
+    try {
+        const { error } = await supabaseClient
+            .from(TablaPlan2026)
+            .insert([sitioPendienteReprogramacion]);
+
+        if (error) {
+            throw new Error(error.message);
+        }
+
+        resultadoDiv.innerHTML =
+            `<div class="estado-cargado">✅ Sitio agregado correctamente a Plan2026.</div>`;
+        confirmacionDiv.classList.add('hidden');
+        sitioPendienteReprogramacion = null;
+
+        // Refrescar el plan en memoria para que quede reflejado en Verificación mensual
+        DatosPlan2026 = await cargarTablaSupabase(TablaPlan2026);
+        asignarColumnasEjecucion();
+
+    } catch (err) {
+        console.error('Error al reprogramar:', err);
+        resultadoDiv.innerHTML = `<div class="error">Error al agregar el sitio: ${err.message}</div>`;
+    }
+}
+
+function cancelarReprogramacion() {
+    sitioPendienteReprogramacion = null;
+    document.getElementById('reprogConfirmacion').classList.add('hidden');
+    document.getElementById('reprogResultado').innerHTML = '';
+}
+
+
 // ============================================================
 // LOGIN
 // ============================================================
