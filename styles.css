@@ -357,7 +357,11 @@ button {
    PÁGINA PRINCIPAL
 ========================================================= */
 
-
+.main-content {
+    max-width: 950px;
+    margin: auto;
+    padding: 56px 32px;
+}
 
 .welcome h1 {
     margin: 0 0 6px;
