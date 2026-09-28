@@ -847,3 +847,19 @@ tbody tr:hover {
         display: none;
     }
 }
+
+.boton-subir {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #007bff; /* Cambia al color de tu diseño */
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+    text-align: center;
+}
+
+.boton-subir:hover {
+    background-color: #0056b3; /* Color un poco más oscuro al pasar el mouse */
+}

@@ -90,7 +90,15 @@
                 <div id="card-preventivo" class="file-upload-card">
                     <h3>Mantenimiento Preventivo</h3>
                     <p>Reporte de Mantenimiento preventivo exportado de Autin.</p>
-                    <input type="file" id="archivoMPautin" accept=".xlsx" onchange="cargarArchivo(event, 'preventivo', 'Data Preventivo')">
+                    
+                    <!-- 1. El input ahora tiene un estilo inline para ocultarse -->
+                    <input type="file" id="archivoMPautin" accept=".xlsx" style="display: none;" onchange="cargarArchivo(event, 'preventivo', 'Data Preventivo')">
+                    
+                    <!-- 2. Este label actúa como tu nuevo botón con texto personalizado -->
+                    <label for="archivoMPautin" class="boton-subir">
+                        Subir reporte de Autin
+                    </label>
+                    
                     <div id="estado-preventivo" class="archivo-estado"></div>
                 </div>
 
