@@ -1230,6 +1230,8 @@ function abrirModulo(modulo) {
     }
 
 }
+
+
 // ============================================================
 // COMPARACIÓN MES vs HISTÓRICO (port del script de Python)
 // Depende de: datosArchivos.preventivo, DatosBaseSitios,
@@ -1481,53 +1483,98 @@ function generarComparacion(anio, mes) {
 }
 
 // ------------------------------------------------------------
-// UI: ejecutar, mostrar y descargar
+// UI (certificacionPage): ejecutar, filtrar, mostrar y descargar
 // ------------------------------------------------------------
 
 let ResultadoComparacion = { comparacion: [], tablaPromedios: [] };
+let ComparacionMostrada = [];
+
+function mostrarLoadingComp(visible) {
+    document.getElementById("loadingComp").style.display = visible ? "block" : "none";
+}
+
+function mostrarErrorComp(msg) {
+    const el = document.getElementById("errorComp");
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
+}
 
 function ejecutarComparacion() {
-    const cont = document.getElementById("comparacionContenedor");
     const anio = Number(document.getElementById("compAnio").value);
     const mes = Number(document.getElementById("compMes").value);
 
+    mostrarErrorComp("");
+
     if (!anio || !mes) {
-        cont.innerHTML = `<div class="error">Indica año y mes.</div>`;
+        mostrarErrorComp("Indica año y mes.");
         return;
     }
     if (!datosArchivos.preventivo || datosArchivos.preventivo.length === 0) {
-        cont.innerHTML = `<div class="error">Carga primero el archivo de preventivos.</div>`;
+        mostrarErrorComp("Carga primero el archivo de preventivos.");
         return;
     }
     if (!DatosBaseSitios || DatosBaseSitios.length === 0) {
-        cont.innerHTML = `<div class="error">La Base de Sitios no está cargada.</div>`;
+        mostrarErrorComp("La Base de Sitios no está cargada.");
         return;
     }
 
-    ResultadoComparacion = generarComparacion(anio, mes);
-    renderTablaGenerica(cont, ResultadoComparacion.comparacion);
+    mostrarLoadingComp(true);
+    // setTimeout permite que el loading se pinte antes del cálculo
+    setTimeout(() => {
+        try {
+            ResultadoComparacion = generarComparacion(anio, mes);
+            aplicarFiltroComparacion();
+        } catch (e) {
+            console.error(e);
+            mostrarErrorComp("Error al generar la comparación: " + e.message);
+        } finally {
+            mostrarLoadingComp(false);
+        }
+    }, 30);
 }
 
-function renderTablaGenerica(contenedor, filas) {
-    contenedor.innerHTML = "";
+function aplicarFiltroComparacion() {
+    const texto = document.getElementById("filtroSiteIdComp").value;
+    const ids = texto.split(/[\s,;]+/).map(x => x.trim().toUpperCase()).filter(Boolean);
+
+    const todas = ResultadoComparacion.comparacion;
+    ComparacionMostrada = ids.length
+        ? todas.filter(f => ids.includes(String(f["Site Id"]).toUpperCase()))
+        : todas;
+
+    renderTablaComparacion(ComparacionMostrada);
+
+    document.getElementById("contadorComp").textContent = todas.length
+        ? `Mostrando ${ComparacionMostrada.length} de ${todas.length} sitios`
+        : "";
+}
+
+function limpiarFiltroComparacion() {
+    document.getElementById("filtroSiteIdComp").value = "";
+    aplicarFiltroComparacion();
+}
+
+function renderTablaComparacion(filas) {
+    const tabla = document.getElementById("tablaComp");
+    const encabezados = document.getElementById("encabezadosComp");
+    const cuerpo = document.getElementById("datosComp");
+
+    encabezados.innerHTML = "";
+    cuerpo.innerHTML = "";
+
     if (!filas.length) {
-        contenedor.innerHTML = `<div class="error">Sin resultados.</div>`;
+        tabla.style.display = "none";
         return;
     }
-    const cols = Object.keys(filas[0]);
-    const tabla = document.createElement("table");
 
-    const trh = document.createElement("tr");
-    cols.forEach(c => {
+    Object.keys(filas[0]).forEach(c => {
         const th = document.createElement("th");
         th.textContent = c;
-        trh.appendChild(th);
+        encabezados.appendChild(th);
     });
-    const thead = document.createElement("thead");
-    thead.appendChild(trh);
-    tabla.appendChild(thead);
 
-    const tbody = document.createElement("tbody");
+    const cols = Object.keys(filas[0]);
+    const frag = document.createDocumentFragment();
     filas.forEach(f => {
         const tr = document.createElement("tr");
         cols.forEach(c => {
@@ -1535,22 +1582,26 @@ function renderTablaGenerica(contenedor, filas) {
             td.textContent = f[c] ?? "-";
             tr.appendChild(td);
         });
-        tbody.appendChild(tr);
+        frag.appendChild(tr);
     });
-    tabla.appendChild(tbody);
-    contenedor.appendChild(tabla);
+    cuerpo.appendChild(frag);
+    tabla.style.display = "table";
 }
 
 function descargarComparacion() {
-    if (!ResultadoComparacion.comparacion.length) {
+    if (!ComparacionMostrada.length) {
         alert("No hay datos para descargar.");
         return;
     }
     const libro = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(libro, XLSX.utils.json_to_sheet(ResultadoComparacion.comparacion), "Comparación");
+    XLSX.utils.book_append_sheet(libro, XLSX.utils.json_to_sheet(ComparacionMostrada), "Comparación");
     XLSX.utils.book_append_sheet(libro, XLSX.utils.json_to_sheet(ResultadoComparacion.tablaPromedios), "Promedio por tipo");
     XLSX.writeFile(libro, `comparacion_${new Date().toISOString().slice(0, 10)}.xlsx`);
 }
+
+
+
+
 
 // ============================================================
 // VOLVER AL MENÚ
