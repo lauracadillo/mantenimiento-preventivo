@@ -190,28 +190,76 @@
          CERTIFICACIÓN FLM
     ====================================================== -->
 
+    <!-- =====================================================
+         CERTIFICACIÓN FLM
+    ====================================================== -->
+
     <section id="certificacionPage" class="page hidden">
 
         <header class="module-header">
             <button class="btn-back" onclick="volverMenu()">Volver al menú</button>
             <div>
                 <h1>Certificación FLM</h1>
+                <span class="module-sub">Comparación de mantenimientos del mes vs histórico</span>
             </div>
             <button class="btn-logout" onclick="cerrarSesion()">Cerrar sesión</button>
         </header>
 
-        <main class="empty-module">
-            <div class="empty-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="9"></circle>
-                    <path d="M8 12.2l2.4 2.4L16 9"></path>
-                </svg>
-            </div>
-            <h2>Módulo de Certificación FLM</h2>
-            <p>Este módulo estará disponible próximamente.</p>
-        </main>
+        <main class="verification-container">
 
+            <!-- FILTROS -->
+
+            <div class="filter-card">
+                <label for="compAnio">Año:</label>
+                <input type="number" id="compAnio" min="2020" max="2100" style="width: 90px;">
+
+                <label for="compMes">Mes:</label>
+                <select id="compMes">
+                    <option value="1">Enero</option>
+                    <option value="2">Febrero</option>
+                    <option value="3">Marzo</option>
+                    <option value="4">Abril</option>
+                    <option value="5">Mayo</option>
+                    <option value="6">Junio</option>
+                    <option value="7">Julio</option>
+                    <option value="8">Agosto</option>
+                    <option value="9">Septiembre</option>
+                    <option value="10">Octubre</option>
+                    <option value="11">Noviembre</option>
+                    <option value="12">Diciembre</option>
+                </select>
+
+                <button class="btn-primary" onclick="ejecutarComparacion()">Generar comparación</button>
+
+                <label for="filtroSiteIdComp">Site ID:</label>
+                <input type="text" id="filtroSiteIdComp" placeholder="Ej: LI00001, LI00002">
+
+                <button class="btn-primary" onclick="aplicarFiltroComparacion()">Filtrar</button>
+                <button class="btn-secondary" onclick="limpiarFiltroComparacion()">Limpiar</button>
+                <button class="btn-secondary" onclick="descargarComparacion()">Descargar Comparación</button>
+            </div>
+
+            <!-- ESTADO -->
+
+            <div id="loadingComp" class="loading" style="display: none;"><img src="imagenes/movistar.gif" alt="Movistar" /></div>
+            <div id="errorComp" class="error" style="display: none;"></div>
+
+            <div id="contadorComp" class="counter"></div>
+
+            <!-- TABLA DE DATOS -->
+
+            <div class="table-container">
+                <table id="tablaComp" style="display: none;">
+                    <thead>
+                        <tr id="encabezadosComp"></tr>
+                    </thead>
+                    <tbody id="datosComp"></tbody>
+                </table>
+            </div>
+        </main>
     </section>
+
+    
 
     <!-- =====================================================
          VERIFICACIÓN MENSUAL
@@ -229,11 +277,6 @@
         </header>
 
         <main class="verification-container">
-
-            <p class="section-label">Cargar archivos para proceder con la verificación del plan mensual</p>
-
-            
-
 
             <!-- FILTROS -->
 
@@ -266,7 +309,7 @@
             <!-- ESTADO -->
 
             <div id="loading" class="loading"><img src="imagenes/movistar.gif" alt="Movistar" /></div>
-            <div id="error" class="error">Error al cargar los datos!</div>
+            <div id="error" class="error">Error al cargar los datos</div>
 
             <div id="contadorFilas" class="counter"></div>
 

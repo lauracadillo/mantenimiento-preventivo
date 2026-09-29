@@ -11,7 +11,9 @@ const ColsVerificacionMensual = ['Site Id', 'Site Name', 'TipoN', "mes a ejecuta
 const ColumnasBaseSitios = {
     siteId: 'Codigo Unico',
     siteName: 'Nombre Local',
-    tipo: 'Tipo Local' // AGREGAR EN LA BASE DE SUPABASE LA FRECUENCIA DE CADA SITIO !!!
+    tipo: 'Tipo Local', 
+    zona: 'Zona'
+    // AGREGAR EN LA BASE DE SUPABASE LA FRECUENCIA DE CADA SITIO !!!
 };
 
 // Sitio validado, en espera de confirmación del usuario, para el módulo de Reprogramación.
@@ -485,15 +487,125 @@ function actualizarEstadoArchivos() {
 // FUNCIÓN AUXILIAR: Hallar el ultimo mtto correctivo y preventivo 
 // ============================================================
 
-function parsearFecha(fechaStr) {
-    /**
-     * Convierte string a Date
-     */
-    if (!fechaStr || fechaStr.trim() === "") {
-        return null;
+function parsearFecha(valor) {
+    if (valor === null || valor === undefined || valor === "") return null;
+
+    if (valor instanceof Date) {
+        return isNaN(valor.getTime()) ? null : valor;
     }
-    const fecha = new Date(fechaStr);
+
+    // Serial de Excel
+    if (typeof valor === "number") {
+        const p = XLSX.SSF.parse_date_code(valor);
+        return p ? new Date(p.y, p.m - 1, p.d, p.H || 0, p.M || 0, Math.floor(p.S || 0)) : null;
+    }
+
+    const str = String(valor).trim();
+    if (!str) return null;
+
+    // Fecha ISO sin hora: interpretarla en hora local (evita el desfase UTC)
+    const iso = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (iso) return new Date(+iso[1], +iso[2] - 1, +iso[3]);
+
+    const fecha = new Date(str);
     return isNaN(fecha.getTime()) ? null : fecha;
+}
+
+// ============================================================
+// ÚLTIMO MP SEGÚN PORCENTAJE DE EJECUCIÓN POR MES (igual que Python)
+// ============================================================
+
+const COLUMNA_MES_PROGRA_PM = "2_MES_PROGRA";
+
+const MESES_ABREV = {
+    ene: 1, feb: 2, mar: 3, abr: 4, may: 5, jun: 6,
+    jul: 7, ago: 8, set: 9, sep: 9, oct: 10, nov: 11, dic: 12
+};
+
+function convertirMesAno(valor) {
+    /**
+     * Convierte 'ene-25' -> 202501 (número comparable).
+     * Devuelve null si no se puede interpretar (equivale al dropna de Python).
+     */
+    if (valor === null || valor === undefined || valor === "") return null;
+
+    if (valor instanceof Date && !isNaN(valor.getTime())) {
+        return valor.getFullYear() * 100 + (valor.getMonth() + 1);
+    }
+
+    // Si Excel lo guardó como fecha (serial)
+    if (typeof valor === "number") {
+        const p = XLSX.SSF.parse_date_code(valor);
+        return p ? p.y * 100 + p.m : null;
+    }
+
+    const str = String(valor).trim();
+    if (!str.includes("-")) return null;
+
+    const idx = str.indexOf("-");
+    const mesAbrev = str.slice(0, idx).trim().toLowerCase();
+    const anioStr = str.slice(idx + 1).trim();
+
+    const mes = MESES_ABREV[mesAbrev];
+    if (!mes || !/^\d+$/.test(anioStr)) return null;
+
+    const anio = anioStr.length === 2 ? 2000 + parseInt(anioStr) : parseInt(anioStr);
+    return anio * 100 + mes;
+}
+
+function obtenerFechaCompletacion(fila) {
+    /** First Complete Time si existe, si no Complete Time */
+    return parsearFecha(fila["First Complete Time"]) || parsearFecha(fila["Complete Time"]);
+}
+
+function crearMapaUltimoMP(datosPreventivo) {
+    /**
+     * Por cada Site Id:
+     *  - agrupa por mes de programación
+     *  - recorre los meses del más reciente al más antiguo
+     *  - si completados / programados > 50% -> devuelve la fecha efectiva máxima de los completados
+     */
+    const grupos = {}; // { siteId: { mesProg: { total, fechas: [] } } }
+
+    datosPreventivo.forEach(fila => {
+        const siteId = fila["Site Id"]?.toString().trim();
+        if (!siteId) return;
+
+        const mesProg = convertirMesAno(fila[COLUMNA_MES_PROGRA_PM]);
+        if (mesProg === null) return;
+
+        if (!grupos[siteId]) grupos[siteId] = {};
+        if (!grupos[siteId][mesProg]) grupos[siteId][mesProg] = { total: 0, fechas: [], completados: 0 };
+
+        const grupoMes = grupos[siteId][mesProg];
+        grupoMes.total++;
+
+        const status = fila["Task Status"]?.toString().trim().toLowerCase();
+        if (status === "completed" || status === "closed") {
+            grupoMes.completados++;
+            const fecha = obtenerFechaCompletacion(fila);
+            if (fecha) grupoMes.fechas.push(fecha);
+        }
+    });
+
+    const resultado = {};
+
+    Object.entries(grupos).forEach(([siteId, meses]) => {
+        const mesesOrdenados = Object.keys(meses).map(Number).sort((a, b) => b - a);
+
+        for (const mes of mesesOrdenados) {
+            const { total, completados, fechas } = meses[mes];
+            if (total === 0) continue;
+
+            if (completados / total > 0.5 && fechas.length > 0) {
+                const ultima = new Date(Math.max(...fechas.map(f => f.getTime())));
+                resultado[siteId] = formatearFecha(ultima);
+                break;
+            }
+        }
+    });
+
+    return resultado;
 }
 
 function formatearFecha(fecha) {
@@ -539,10 +651,7 @@ function crearMapaUltimo(datos, campoFecha, campoSiteId) {
 }
 
 function contarPorSiteId(datos, campoSiteId) {
-    /**
-     * Cuenta ocurrencias por Site Id
-     * Equivalente a: .groupby().count()
-     */
+
     const mapa = {};
     
     datos.forEach(fila => {
@@ -556,10 +665,7 @@ function contarPorSiteId(datos, campoSiteId) {
 }
 
 function filtrarPorTaskStatus(datos) {
-    /**
-     * Filtra por Task Status = "completed" o "closed"
-     * Equivalente a: .str.lower().isin(["completed", "closed"])
-     */
+
     return datos.filter(fila => {
         const status = fila["Task Status"]?.toString().toLowerCase();
         return status === "completed" || status === "closed";
@@ -574,10 +680,10 @@ function asignarColumnasEjecucion() {
     // ==========================================
     // FILTRAR Y PROCESAR PREVENTIVOS
     // ==========================================
-    const preventivosEjecutados = filtrarPorTaskStatus(datosArchivos.preventivo || []);
     const correctivosEjecutados = filtrarPorTaskStatus(datosArchivos.correctivo || []);
-    
-    const ultimo_mp = crearMapaUltimo( preventivosEjecutados, "Complete Time", "Site Id");
+
+    // Último MP con la lógica de porcentaje de ejecución por mes
+    const ultimo_mp = crearMapaUltimoMP(datosArchivos.preventivo || []);
     const ultimo_mp_siom = crearMapaUltimo( DatosSIOM, "Fecha ejecución MNT", "CodUnico" );
     const ultimo_mc = crearMapaUltimo( correctivosEjecutados, "Complete Time", "Site Id" );
     
@@ -1124,7 +1230,327 @@ function abrirModulo(modulo) {
     }
 
 }
+// ============================================================
+// COMPARACIÓN MES vs HISTÓRICO (port del script de Python)
+// Depende de: datosArchivos.preventivo, DatosBaseSitios,
+//             convertirMesAno(), parsearFecha(), XLSX
+// El tipo de sitio se toma únicamente de la Base de Sitios (Tipo Local).
+// ============================================================
 
+const ESPECIALIDADES = ["AA", "GE-TTA-TK", "IE", "INV-AVR", "LT", "RADIO",
+    "REC-BB", "SE-LT", "SOL-EOL", "TX-BH", "TX", "UPS"];
+
+const TIPOS_ORDEN = ["P1", "P2", "P3", "D1", "D2", "D3", "B1", "B2", "B3", "B3 B2B"];
+const MESES_TXT = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Set", "Oct", "Nov", "Dic"];
+
+// pandas .round(0) redondea .5 al par más cercano; Math.round no
+function redondearPar(x) {
+    const f = Math.floor(x);
+    const d = x - f;
+    if (d < 0.5) return f;
+    if (d > 0.5) return f + 1;
+    return f % 2 === 0 ? f : f + 1;
+}
+
+// ------------------------------------------------------------
+// Preparación de datos
+// ------------------------------------------------------------
+
+function prepararPreventivosComparacion() {
+    // Solo completed / closed (igual que df_autin en Python)
+    return (datosArchivos.preventivo || [])
+        .filter(f => {
+            const st = String(f["Task Status"] ?? "").trim().toLowerCase();
+            return st === "completed" || st === "closed";
+        })
+        .map(f => {
+            const prog = convertirMesAno(f["2_MES_PROGRA"]); // yyyymm o null
+            return {
+                taskId: f["Task Id"],
+                siteId: String(f["Site Id"] ?? "").trim(),
+                esp: f["SUB_ESPECIALIDAD"],
+                mesPrograRaw: f["2_MES_PROGRA"],
+                fecha: parsearFecha(f["Complete Time"]),
+                anioProg: prog ? Math.floor(prog / 100) : null,
+                mesProg: prog ? prog % 100 : null
+            };
+        });
+}
+
+function obtenerSitiosBase() {
+    return DatosBaseSitios.map(f => ({
+        siteId: String(f[ColumnasBaseSitios.siteId] ?? "").trim(),
+        nombre: f[ColumnasBaseSitios.siteName],
+        tipo: f[ColumnasBaseSitios.tipo],
+        zona: f[ColumnasBaseSitios.zona]
+    }));
+}
+
+// ------------------------------------------------------------
+// procesar_datos: promedio de mttos por especialidad y sitio
+// ------------------------------------------------------------
+
+function procesarDatosComparacion(rows, sitios) {
+    const porSitio = {};
+
+    rows.forEach(r => {
+        if (!r.siteId) return;
+        if (!porSitio[r.siteId]) porSitio[r.siteId] = { meses: new Set(), conteo: {}, ultima: null };
+        const d = porSitio[r.siteId];
+
+        if (r.mesPrograRaw !== null && r.mesPrograRaw !== undefined && r.mesPrograRaw !== "") {
+            d.meses.add(String(r.mesPrograRaw));
+        }
+        if (r.esp) d.conteo[r.esp] = (d.conteo[r.esp] || 0) + 1;
+        if (r.fecha && (!d.ultima || r.fecha > d.ultima)) d.ultima = r.fecha;
+    });
+
+    // LEFT JOIN desde la base de sitios: se mantienen TODOS los sitios
+    const resultado = new Map();
+    sitios.forEach(s => {
+        const d = porSitio[s.siteId];
+        const fila = { ...s, esp: {}, total: 0, ultimo: "sin registro" };
+
+        ESPECIALIDADES.forEach(e => {
+            let v = 0;
+            if (d && d.meses.size > 0 && d.conteo[e]) {
+                v = Math.ceil(d.conteo[e] / d.meses.size);
+            }
+            fila.esp[e] = v;
+            fila.total += v;
+        });
+
+        if (d && d.ultima) {
+            fila.ultimo = `${MESES_TXT[d.ultima.getMonth()]}-${String(d.ultima.getFullYear()).slice(-2)}`;
+        }
+
+        resultado.set(s.siteId, fila);
+    });
+
+    return resultado;
+}
+
+// ------------------------------------------------------------
+// Función principal
+// ------------------------------------------------------------
+
+function generarComparacion(anio, mes) {
+    const todos = prepararPreventivosComparacion();
+    const sitios = obtenerSitiosBase();
+
+    const enMes = r => r.anioProg === anio && r.mesProg === mes;
+
+    // Fecha de corte: ayer a las 00:00
+    const fechaCorte = new Date();
+    fechaCorte.setDate(fechaCorte.getDate() - 1);
+    fechaCorte.setHours(0, 0, 0, 0);
+
+    // ---------- Mes actual e histórico ----------
+    const mesActual = todos.filter(enMes);
+
+    const historico = todos.filter(r =>
+        r.fecha && r.fecha < fechaCorte &&
+        !(enMes(r) && r.fecha <= fechaCorte)
+    );
+
+    // ---------- Levantamiento de observaciones ----------
+    const desfasados = mesActual.filter(r => !enMes(r));
+    const sitiosConProgMes = new Set(mesActual.filter(enMes).map(r => r.siteId));
+    const sitiosLevantamiento = new Set(
+        desfasados.filter(r => !sitiosConProgMes.has(r.siteId)).map(r => r.siteId)
+    );
+
+    const setMesActual = new Set(mesActual);
+    const adicionalesSet = new Set();
+
+    sitiosLevantamiento.forEach(siteId => {
+        const pares = new Set(
+            desfasados
+                .filter(r => r.siteId === siteId && r.anioProg !== null && r.mesProg !== null)
+                .map(r => `${r.anioProg}-${r.mesProg}`)
+        );
+        pares.forEach(par => {
+            const [a, m] = par.split("-").map(Number);
+            todos.forEach(r => {
+                if (r.siteId === siteId && r.fecha &&
+                    r.fecha.getFullYear() === a && r.fecha.getMonth() + 1 === m &&
+                    !setMesActual.has(r)) {
+                    adicionalesSet.add(r);
+                }
+            });
+        });
+    });
+    const adicionales = [...adicionalesSet];
+
+    // Conteo por origen
+    const conteoParam = {};
+    const conteoProg = {};
+    mesActual.forEach(r => { conteoParam[r.siteId] = (conteoParam[r.siteId] || 0) + 1; });
+    adicionales.forEach(r => { conteoProg[r.siteId] = (conteoProg[r.siteId] || 0) + 1; });
+
+    const mesActualCompleto = [...mesActual, ...adicionales];
+
+    // ---------- Tablas por sitio ----------
+    const tablaHist = procesarDatosComparacion(historico, sitios);
+    const tablaAct = procesarDatosComparacion(mesActualCompleto, sitios);
+
+    // ---------- Task Ids históricos por sitio + especialidad ----------
+    const tasksHistoricos = {};
+    historico.forEach(r => {
+        if (r.taskId === null || r.taskId === undefined || r.taskId === "" || !r.esp) return;
+        const key = `${r.siteId}||${r.esp}`;
+        if (!tasksHistoricos[key]) tasksHistoricos[key] = new Set();
+        tasksHistoricos[key].add(String(r.taskId));
+    });
+
+    // ---------- Promedio por tipo de sitio (sobre tabla histórica) ----------
+    const grupos = {};
+    tablaHist.forEach(f => {
+        if (!f.tipo) return;
+        if (!grupos[f.tipo]) grupos[f.tipo] = [];
+        grupos[f.tipo].push(f);
+    });
+
+    const promedioPorTipo = {}; // { tipo: { esp: promedio, Total } }
+    Object.entries(grupos).forEach(([tipo, filas]) => {
+        const p = {};
+        let total = 0;
+        ESPECIALIDADES.forEach(e => {
+            const media = filas.reduce((acc, f) => acc + f.esp[e], 0) / filas.length;
+            p[e] = redondearPar(media);
+            total += p[e];
+        });
+        p.Total = Math.round(total * 100) / 100;
+        promedioPorTipo[tipo] = p;
+    });
+
+    // ---------- Tabla de comparación ----------
+    const sitiosProgramados = new Set(todos.filter(enMes).map(r => r.siteId));
+
+    const comparacion = sitios
+        .filter(s => sitiosProgramados.has(s.siteId))
+        .map(s => {
+            const h = tablaHist.get(s.siteId);
+            const a = tablaAct.get(s.siteId);
+
+            const diferencias = [];
+            const tasksFaltantes = [];
+
+            ESPECIALIDADES.forEach(esp => {
+                const diff = a.esp[esp] - h.esp[esp];
+                if (diff === 0) return;
+
+                const signo = diff > 0 ? "+" : "";
+                diferencias.push(`${signo}${diff} ${esp} (${a.esp[esp]} / ${h.esp[esp]})`);
+
+                if (diff < 0) {
+                    const ids = tasksHistoricos[`${s.siteId}||${esp}`];
+                    if (ids && ids.size > 0) tasksFaltantes.push(`${esp}: ${[...ids].join(", ")}`);
+                }
+            });
+
+            const promTipo = promedioPorTipo[s.tipo];
+
+            return {
+                "Site Id": s.siteId,
+                "Nombre Local": s.nombre,
+                "Tipo Local": s.tipo,
+                "Promedio_Esperado": promTipo ? promTipo.Total : "",
+                "Zona": s.zona,
+                "Hist_Total": h.total,
+                "mes_actual_Total": a.total,
+                "Resumen_Diferencias": diferencias.length ? diferencias.join(", ") : "Sin diferencias",
+                "Diff_Total": a.total - h.total,
+                "levantamiento de observaciones": sitiosLevantamiento.has(s.siteId) ? "Sí" : "No",
+                "Mttos_Mes_Actual_Parametro": conteoParam[s.siteId] || 0,
+                "Mttos_Mes_Programado": conteoProg[s.siteId] || 0,
+                "Task Ids Anteriores": tasksFaltantes.join(" | ")
+            };
+        });
+
+    // Tabla de promedios ordenada como en Python
+    const tablaPromedios = Object.entries(promedioPorTipo)
+        .map(([tipo, p]) => ({ "Tipo de Sitio": tipo, ...p }))
+        .sort((x, y) => {
+            const ix = TIPOS_ORDEN.includes(x["Tipo de Sitio"]) ? TIPOS_ORDEN.indexOf(x["Tipo de Sitio"]) : TIPOS_ORDEN.length;
+            const iy = TIPOS_ORDEN.includes(y["Tipo de Sitio"]) ? TIPOS_ORDEN.indexOf(y["Tipo de Sitio"]) : TIPOS_ORDEN.length;
+            return ix - iy;
+        });
+
+    return { comparacion, tablaPromedios };
+}
+
+// ------------------------------------------------------------
+// UI: ejecutar, mostrar y descargar
+// ------------------------------------------------------------
+
+let ResultadoComparacion = { comparacion: [], tablaPromedios: [] };
+
+function ejecutarComparacion() {
+    const cont = document.getElementById("comparacionContenedor");
+    const anio = Number(document.getElementById("compAnio").value);
+    const mes = Number(document.getElementById("compMes").value);
+
+    if (!anio || !mes) {
+        cont.innerHTML = `<div class="error">Indica año y mes.</div>`;
+        return;
+    }
+    if (!datosArchivos.preventivo || datosArchivos.preventivo.length === 0) {
+        cont.innerHTML = `<div class="error">Carga primero el archivo de preventivos.</div>`;
+        return;
+    }
+    if (!DatosBaseSitios || DatosBaseSitios.length === 0) {
+        cont.innerHTML = `<div class="error">La Base de Sitios no está cargada.</div>`;
+        return;
+    }
+
+    ResultadoComparacion = generarComparacion(anio, mes);
+    renderTablaGenerica(cont, ResultadoComparacion.comparacion);
+}
+
+function renderTablaGenerica(contenedor, filas) {
+    contenedor.innerHTML = "";
+    if (!filas.length) {
+        contenedor.innerHTML = `<div class="error">Sin resultados.</div>`;
+        return;
+    }
+    const cols = Object.keys(filas[0]);
+    const tabla = document.createElement("table");
+
+    const trh = document.createElement("tr");
+    cols.forEach(c => {
+        const th = document.createElement("th");
+        th.textContent = c;
+        trh.appendChild(th);
+    });
+    const thead = document.createElement("thead");
+    thead.appendChild(trh);
+    tabla.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+    filas.forEach(f => {
+        const tr = document.createElement("tr");
+        cols.forEach(c => {
+            const td = document.createElement("td");
+            td.textContent = f[c] ?? "-";
+            tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+    });
+    tabla.appendChild(tbody);
+    contenedor.appendChild(tabla);
+}
+
+function descargarComparacion() {
+    if (!ResultadoComparacion.comparacion.length) {
+        alert("No hay datos para descargar.");
+        return;
+    }
+    const libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, XLSX.utils.json_to_sheet(ResultadoComparacion.comparacion), "Comparación");
+    XLSX.utils.book_append_sheet(libro, XLSX.utils.json_to_sheet(ResultadoComparacion.tablaPromedios), "Promedio por tipo");
+    XLSX.writeFile(libro, `comparacion_${new Date().toISOString().slice(0, 10)}.xlsx`);
+}
 
 // ============================================================
 // VOLVER AL MENÚ
