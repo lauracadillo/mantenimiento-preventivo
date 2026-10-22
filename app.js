@@ -12,8 +12,7 @@ const ColumnasBaseSitios = {
     siteId: 'Codigo Unico',
     siteName: 'Nombre Local',
     tipo: 'Tipo Local', 
-    zona: 'Zona'
-    // AGREGAR EN LA BASE DE SUPABASE LA FRECUENCIA DE CADA SITIO !!!
+    zona: 'Zona'// AGREGAR EN LA BASE DE SUPABASE LA FRECUENCIA DE CADA SITIO !!!
 };
 
 // Sitio validado, en espera de confirmación del usuario, para el módulo de Reprogramación.
