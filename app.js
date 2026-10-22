@@ -1038,6 +1038,28 @@ function buscarSitioEnBaseSitios(siteId) {
     }) || null;
 }
 
+function buscarSitioEnPlan(siteId) {
+    /**
+     * Busca el Site Id en Plan2026 (ya cargado en DatosPlan2026) para obtener
+     * TipoN y Frecuencia. Si el sitio aparece varias filas, usa la primera
+     * que tenga Frecuencia definida.
+     */
+    const siteIdStr = siteId?.toString().trim().toLowerCase();
+    if (!siteIdStr) return null;
+
+    const filas = DatosPlan2026.filter(fila =>
+        fila["Site Id"]?.toString().trim().toLowerCase() === siteIdStr
+    );
+
+    if (filas.length === 0) return null;
+
+    return filas.find(f => f["Frecuencia"] !== null &&
+                           f["Frecuencia"] !== undefined &&
+                           f["Frecuencia"] !== "") || filas[0];
+}
+
+
+
 function verificarReprogramacion() {
     /**
      * Paso 1 del flujo de reprogramación:
@@ -1087,10 +1109,23 @@ function verificarReprogramacion() {
         return;
     }
 
-    const tipo = sitio[ColumnasBaseSitios.tipo];
-    const frecuencia = sitio[ColumnasBaseSitios.frecuencia];
-    const siteName = sitio[ColumnasBaseSitios.siteName] || '-';
+        const siteName = sitio[ColumnasBaseSitios.siteName] || '-';
     const siteIdReal = sitio[ColumnasBaseSitios.siteId];
+
+    // Frecuencia y TipoN se toman de Plan2026
+    const sitioPlan = buscarSitioEnPlan(siteIdReal);
+
+    if (!sitioPlan) {
+        resultadoDiv.innerHTML =
+            `<div class="error">
+                El Site ID "${siteIdReal}" no existe en Plan2026, por lo que no se
+                puede obtener su frecuencia.
+            </div>`;
+        return;
+    }
+
+    const tipo = sitioPlan["TipoN"];
+    const frecuencia = sitioPlan["Frecuencia"];
 
     const verificacion = verificarExclusión(siteIdReal, tipo);
 
@@ -1261,7 +1296,7 @@ function abrirModulo(modulo) {
 
 
 // ============================================================
-// COMPARACIÓN MES vs HISTÓRICO (port del script de Python)
+// COMPARACIÓN MES vs HISTÓRICO (basadi en el script de Python)
 // Depende de: datosArchivos.preventivo, DatosBaseSitios,
 //             convertirMesAno(), parsearFecha(), XLSX
 // El tipo de sitio se toma únicamente de la Base de Sitios (Tipo Local).
