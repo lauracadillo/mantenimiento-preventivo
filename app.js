@@ -1170,43 +1170,72 @@ function cancelarReprogramacion() {
 
 
 // ============================================================
-// LOGIN
+// LOGIN (Supabase Auth)
 // ============================================================
 
-function iniciarSesion() {
+// Cambia por el dominio con el que creaste los usuarios en Supabase.
+// Si tus usuarios ya son correos completos, el usuario puede escribirlo
+// completo y este dominio no se usa.
+const DOMINIO_USUARIOS = '@mttoprev.com';
 
-    const usuario = document.getElementById("usuario").value.trim();
-    const password = document.getElementById("password").value.trim();
+async function iniciarSesion() {
+
+    const usuarioInput = document.getElementById("usuario").value.trim();
+    const password = document.getElementById("password").value; // sin trim
     const error = document.getElementById("loginError");
 
-    // LOGIN TEMPORAL
-
-    const usuarioCorrecto = "admin";
-    const passwordCorrecto = "1234";
-
-    if (
-        usuario === usuarioCorrecto &&
-        password === passwordCorrecto
-    ) {
-
-        error.textContent = "";
-        document.getElementById("usuarioLogueado")
-            .textContent = usuario;
-        mostrarPagina("mainPage");
-
-    } else {
-        error.textContent = "Usuario o contraseña incorrectos.";
+    if (!usuarioInput || !password) {
+        error.textContent = "Ingresa usuario y contraseña.";
+        return;
     }
+
+    // Si escribió un correo completo se usa tal cual; si no, se agrega el dominio
+    const email = usuarioInput.includes("@")
+        ? usuarioInput
+        : usuarioInput + DOMINIO_USUARIOS;
+
+    error.textContent = "Ingresando...";
+
+    const { data, error: authError } = await supabaseClient.auth.signInWithPassword({
+        email,
+        password
+    });
+
+    if (authError) {
+        console.error("Error de login:", authError.message);
+        error.textContent = "Usuario o contraseña incorrectos.";
+        return;
+    }
+
+    error.textContent = "";
+    await entrarALaApp(data.user);
+}
+
+// Se ejecuta tras un login válido o al recuperar una sesión existente
+async function entrarALaApp(user) {
+    document.getElementById("usuarioLogueado").textContent = user.email;
+    mostrarPagina("mainPage");
+    await cargarDatos(); // los datos se cargan DESPUÉS de autenticarse
 }
 
 // ============================================================
 // CERRAR SESIÓN
 // ============================================================
 
-function cerrarSesion() {
+async function cerrarSesion() {
+    await supabaseClient.auth.signOut();
+
     document.getElementById("usuario").value = "";
     document.getElementById("password").value = "";
     document.getElementById("loginError").textContent = "";
+
+    // Limpiar datos en memoria para que no queden al cambiar de usuario
+    DatosPlan2026 = [];
+    DatosSIOM = [];
+    DatosBaseSitios = [];
+    DatosMostrados = [];
+    sitioPendienteReprogramacion = null;
+
     mostrarPagina("loginPage");
 }
 
@@ -1624,11 +1653,32 @@ function mostrarPagina(idPagina) {
     if (pagina) {pagina.classList.remove("hidden");}
 }
 
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
-        // Mostrar login al iniciar
+// ============================================================
+// INICIO DE LA APP
+// ============================================================
+
+document.addEventListener("DOMContentLoaded", async function () {
+
+    // Enter en los campos del login
+    ["usuario", "password"].forEach(id => {
+        document.getElementById(id).addEventListener("keydown", e => {
+            if (e.key === "Enter") iniciarSesion();
+        });
+    });
+
+    // Si hay una sesión guardada, entrar directo; si no, mostrar login
+    const { data: { session } } = await supabaseClient.auth.getSession();
+
+    if (session) {
+        await entrarALaApp(session.user);
+    } else {
         mostrarPagina("loginPage");
-        cargarDatos();
     }
-);
+
+    // Si la sesión se cierra (o expira) desde otra pestaña, volver al login
+    supabaseClient.auth.onAuthStateChange((event) => {
+        if (event === "SIGNED_OUT") {
+            mostrarPagina("loginPage");
+        }
+    });
+});
