@@ -12,7 +12,8 @@ const ColumnasBaseSitios = {
     siteId: 'Codigo Unico',
     siteName: 'Nombre Local',
     tipo: 'Tipo Local', 
-    zona: 'Zona'// AGREGAR EN LA BASE DE SUPABASE LA FRECUENCIA DE CADA SITIO !!!
+    zona: 'Zona', 
+    frecuencia: Frecuencia// AGREGAR EN LA BASE DE SUPABASE LA FRECUENCIA DE CADA SITIO !!!
 };
 
 // Sitio validado, en espera de confirmación del usuario, para el módulo de Reprogramación.
@@ -1059,7 +1060,6 @@ function buscarSitioEnPlan(siteId) {
 }
 
 
-
 function verificarReprogramacion() {
     /**
      * Paso 1 del flujo de reprogramación:
@@ -1109,23 +1109,10 @@ function verificarReprogramacion() {
         return;
     }
 
-        const siteName = sitio[ColumnasBaseSitios.siteName] || '-';
+    const tipo = sitio[ColumnasBaseSitios.tipo];
+    const frecuencia = sitio[ColumnasBaseSitios.frecuencia];
+    const siteName = sitio[ColumnasBaseSitios.siteName] || '-';
     const siteIdReal = sitio[ColumnasBaseSitios.siteId];
-
-    // Frecuencia y TipoN se toman de Plan2026
-    const sitioPlan = buscarSitioEnPlan(siteIdReal);
-
-    if (!sitioPlan) {
-        resultadoDiv.innerHTML =
-            `<div class="error">
-                El Site ID "${siteIdReal}" no existe en Plan2026, por lo que no se
-                puede obtener su frecuencia.
-            </div>`;
-        return;
-    }
-
-    const tipo = sitioPlan["TipoN"];
-    const frecuencia = sitioPlan["Frecuencia"];
 
     const verificacion = verificarExclusión(siteIdReal, tipo);
 
@@ -1207,9 +1194,6 @@ function cancelarReprogramacion() {
 // LOGIN (Supabase Auth)
 // ============================================================
 
-// Cambia por el dominio con el que creaste los usuarios en Supabase.
-// Si tus usuarios ya son correos completos, el usuario puede escribirlo
-// completo y este dominio no se usa.
 const DOMINIO_USUARIOS = '@mttoprev.com';
 
 async function iniciarSesion() {
@@ -1347,7 +1331,8 @@ function obtenerSitiosBase() {
         siteId: String(f[ColumnasBaseSitios.siteId] ?? "").trim(),
         nombre: f[ColumnasBaseSitios.siteName],
         tipo: f[ColumnasBaseSitios.tipo],
-        zona: f[ColumnasBaseSitios.zona]
+        zona: f[ColumnasBaseSitios.zona],
+        frecuencia : f[ColumnasBaseSitios.frecuencia]
     }));
 }
 
