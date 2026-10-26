@@ -1116,13 +1116,13 @@ function verificarReprogramacion() {
 
     const verificacion = verificarExclusión(siteIdReal, tipo);
     const motivoExclusion = verificacion.motivo;
-    // resultadoDiv.innerHTML =`<div class="error">Sitio se excluyó por: ${verificacion.motivo}</div>`
-    // if (verificacion.excluir) {
-    //     alert(`No es posible reprogramar este sitio.\nMotivo: ${verificacion.motivo}`);
-    //     resultadoDiv.innerHTML =
-    //         `<div class="error">Sitio excluido — Motivo: ${verificacion.motivo}</div>`;
-    //     return;
-    // }
+    resultadoDiv.innerHTML =`<div class="error">Sitio se excluyó por: ${verificacion.motivo}</div>`
+    if (verificacion.excluir) {
+        alert(`No es posible reprogramar este sitio.\nMotivo: ${verificacion.motivo}`);
+        resultadoDiv.innerHTML =
+            `<div class="error">Sitio excluido — Motivo: ${verificacion.motivo}</div>`;
+        return;
+    }
 
     // Sitio válido: se guarda como pendiente hasta que el usuario confirme
     sitioPendienteReprogramacion = {
