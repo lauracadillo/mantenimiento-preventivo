@@ -1139,6 +1139,7 @@ function verificarReprogramacion() {
 
     resultadoDiv.innerHTML = `
         <div class="reprog-info">
+            <p><strong>VERIFICACION:</strong> ${verificacion}</p>
             <p><strong>Site ID:</strong> ${siteIdReal}</p>
             <p><strong>Site Name:</strong> ${siteName}</p>
             <p><strong>Tipo:</strong> ${tipo || '-'}</p>
