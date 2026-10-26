@@ -1116,11 +1116,11 @@ function verificarReprogramacion() {
 
     const verificacion = verificarExclusión(siteIdReal, tipo);
     const motivoExclusion = verificacion.motivo;
-    resultadoDiv.innerHTML =`<div class="error">Sitio se excluyó por: ${verificacion.motivo}</div>`
-    if (verificacion.excluir) {
-        alert(`No es posible reprogramar este sitio.\nMotivo: ${verificacion.motivo}`);
+
+    if (motivoExclusion != "-") {
+        alert(`No es posible reprogramar este sitio.\nMotivo: ${motivoExclusion}`);
         resultadoDiv.innerHTML =
-            `<div class="error">Sitio excluido — Motivo: ${verificacion.motivo}</div>`;
+            `<div class="error">Sitio excluido — Motivo: ${motivoExclusion}</div>`;
         return;
     }
 
