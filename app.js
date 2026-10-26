@@ -1115,7 +1115,7 @@ function verificarReprogramacion() {
     const siteIdReal = sitio[ColumnasBaseSitios.siteId];
 
     const verificacion = verificarExclusión(siteIdReal, tipo);
-    resultadoDiv.innerHTML =`<div class="error">Sitio se excluyó por: ${verificacion.motivo}</div>`
+    // resultadoDiv.innerHTML =`<div class="error">Sitio se excluyó por: ${verificacion.motivo}</div>`
     // if (verificacion.excluir) {
     //     alert(`No es posible reprogramar este sitio.\nMotivo: ${verificacion.motivo}`);
     //     resultadoDiv.innerHTML =
@@ -1125,6 +1125,7 @@ function verificarReprogramacion() {
 
     // Sitio válido: se guarda como pendiente hasta que el usuario confirme
     sitioPendienteReprogramacion = {
+        "Verificacion": verificacion,
         "Site Id": siteIdReal,
         "Site Name": siteName,
         "TipoN": tipo,
