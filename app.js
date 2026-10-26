@@ -13,7 +13,7 @@ const ColumnasBaseSitios = {
     siteName: 'Nombre Local',
     tipo: 'Tipo Local', 
     zona: 'Zona', 
-    frecuencia: "Frecuencia"// AGREGAR EN LA BASE DE SUPABASE LA FRECUENCIA DE CADA SITIO !!!
+    frecuencia: "Frecuencia"
 };
 
 // Sitio validado, en espera de confirmación del usuario, para el módulo de Reprogramación.
@@ -1060,6 +1060,45 @@ function buscarSitioEnPlan(siteId) {
 }
 
 
+
+function construirFilaReprogramacion(siteId, tipo, frecuencia, mes) {
+    // Mismos mapas que usa asignarColumnasEjecucion
+    const correctivosEjecutados = filtrarPorTaskStatus(datosArchivos.correctivo || []);
+    const ultimo_mp = crearMapaUltimoMP(datosArchivos.preventivo || []);
+    const ultimo_mp_siom = crearMapaUltimo(DatosSIOM, "Fecha ejecución MNT", "CodUnico");
+    const ultimo_mc = crearMapaUltimo(correctivosEjecutados, "Complete Time", "Site Id");
+    const cantidad_mc = contarPorSiteId(correctivosEjecutados, "Site Id");
+
+    const id = siteId?.toString();
+    const fila = {
+        "Site Id": id,
+        "TipoN": tipo,
+        "Frecuencia": frecuencia,
+        "mes a ejecutar": mes
+    };
+
+    // Último MP (con fallback a SIOM)
+    if (ultimo_mp[id]) {
+        fila["ultimo_mp"] = ultimo_mp[id];
+    } else if (ultimo_mp_siom[id]) {
+        fila["ultimo_mp"] = `${ultimo_mp_siom[id]} (siom)`;
+    } else {
+        fila["ultimo_mp"] = "Sin registro";
+    }
+
+    fila["ultimo_mc"] = ultimo_mc[id] || "Sin registro";
+    fila["cantidad_mc"] = cantidad_mc[id] || 0;
+
+    // Blacklist / SWAP
+    const estadoExclusion = verificarExclusión(id, tipo);
+    fila["Excluir"] = estadoExclusion.motivo;
+    fila["swap"] = (estadoExclusion.excluir && estadoExclusion.motivo.includes("SWAP"))
+        ? estadoExclusion.motivo
+        : "No";
+
+    return fila;
+}
+
 function verificarReprogramacion() {
     /**
      * Paso 1 del flujo de reprogramación:
@@ -1091,12 +1130,12 @@ function verificarReprogramacion() {
 
     // Los filtros de Blacklist y SWAP dependen de los archivos cargados
     // en el módulo de Verificación mensual (misma sesión / misma página).
-    if (!datosArchivos.blacklist || datosArchivos.blacklist.length === 0 ||
-        !datosArchivos.swap || datosArchivos.swap.length === 0) {
+    if (!datosArchivos.blacklist?.length || !datosArchivos.swap?.length ||
+        !datosArchivos.preventivo?.length || !datosArchivos.correctivo?.length) {
         resultadoDiv.innerHTML =
             `<div class="error">
-                Primero carga los archivos de Blacklist y SWAP en el módulo
-                "Verificación mensual" para poder validar la reprogramación.
+                Primero carga los archivos de Blacklist, SWAP, Preventivo y Correctivo
+                en el módulo "Verificación mensual" para poder validar la reprogramación.
             </div>`;
         return;
     }
@@ -1114,15 +1153,17 @@ function verificarReprogramacion() {
     const siteName = sitio[ColumnasBaseSitios.siteName] || '-';
     const siteIdReal = sitio[ColumnasBaseSitios.siteId];
 
-    const verificacion = verificarExclusión(siteIdReal, tipo);
-    const motivoExclusion = verificacion.motivo;
+    const filaRevision = construirFilaReprogramacion(siteIdReal, tipo, frecuencia, Number(mesInput));
+    const revision = get_revision(filaRevision);
 
-    if (motivoExclusion != "-") {
-        alert(`No es posible reprogramar este sitio.\nMotivo: ${motivoExclusion}`);
+    if (revision !== "") {
+        alert(`No es posible reprogramar este sitio.\nMotivo: ${revision}`);
         resultadoDiv.innerHTML =
-            `<div class="error">Sitio excluido — Motivo: ${motivoExclusion}</div>`;
+            `<div class="error">Sitio excluido — Motivo: ${revision}</div>`;
         return;
     }
+
+    const motivoExclusion = "-"; // sin exclusión, se mantiene el valor que ya guardabas
 
     // Sitio válido: se guarda como pendiente hasta que el usuario confirme
     sitioPendienteReprogramacion = {
