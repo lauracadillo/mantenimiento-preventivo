@@ -1103,9 +1103,10 @@ function verificarReprogramacion() {
     /**
      * Paso 1 del flujo de reprogramación:
      * - Busca el sitio en la Base de Sitios (obtiene TipoN y Frecuencia)
-     * - Corre el mismo chequeo de Blacklist / SWAP que usa Verificación mensual
+     * - Corre get_revision (Blacklist, SWAP, Frecuencia) igual que Verificación mensual
      * - Si es excluible -> alerta y no se puede continuar
-     * - Si es reprogramable -> muestra resumen y pide confirmación al usuario
+     * - Si es reprogramable -> muestra resumen (con último preventivo/correctivo)
+     *   y pide confirmación al usuario
      */
 
     const resultadoDiv = document.getElementById('reprogResultado');
@@ -1128,8 +1129,7 @@ function verificarReprogramacion() {
         return;
     }
 
-    // Los filtros de Blacklist y SWAP dependen de los archivos cargados
-    // en el módulo de Verificación mensual (misma sesión / misma página).
+    // La revisión depende de los archivos cargados en "Verificación mensual"
     if (!datosArchivos.blacklist?.length || !datosArchivos.swap?.length ||
         !datosArchivos.preventivo?.length || !datosArchivos.correctivo?.length) {
         resultadoDiv.innerHTML =
@@ -1153,17 +1153,29 @@ function verificarReprogramacion() {
     const siteName = sitio[ColumnasBaseSitios.siteName] || '-';
     const siteIdReal = sitio[ColumnasBaseSitios.siteId];
 
+    // Construir la fila con los datos que necesita get_revision
     const filaRevision = construirFilaReprogramacion(siteIdReal, tipo, frecuencia, Number(mesInput));
     const revision = get_revision(filaRevision);
 
     if (revision !== "") {
         alert(`No es posible reprogramar este sitio.\nMotivo: ${revision}`);
         resultadoDiv.innerHTML =
-            `<div class="error">Sitio excluido — Motivo: ${revision}</div>`;
+            `<div class="error">
+                Sitio excluido — Motivo: ${revision}<br>
+                Último preventivo: ${filaRevision["ultimo_mp"]}<br>
+                Último correctivo: ${filaRevision["ultimo_mc"]}<br>
+                Cantidad de correctivos: ${filaRevision["cantidad_mc"]}
+            </div>`;
         return;
     }
 
-    const motivoExclusion = "-"; // sin exclusión, se mantiene el valor que ya guardabas
+    const motivoExclusion = "-"; // sin exclusión
+
+    const infoEjecucion = {
+        ultimo_mp: filaRevision["ultimo_mp"],
+        ultimo_mc: filaRevision["ultimo_mc"],
+        cantidad_mc: filaRevision["cantidad_mc"]
+    };
 
     // Sitio válido: se guarda como pendiente hasta que el usuario confirme
     sitioPendienteReprogramacion = {
@@ -1186,6 +1198,9 @@ function verificarReprogramacion() {
             <p><strong>Site Name:</strong> ${siteName}</p>
             <p><strong>Tipo:</strong> ${tipo || '-'}</p>
             <p><strong>Frecuencia:</strong> ${frecuencia || '-'}</p>
+            <p><strong>Último preventivo:</strong> ${infoEjecucion.ultimo_mp}</p>
+            <p><strong>Último correctivo:</strong> ${infoEjecucion.ultimo_mc}</p>
+            <p><strong>Cantidad de correctivos:</strong> ${infoEjecucion.cantidad_mc}</p>
             <p><strong>Mes a reprogramar:</strong> ${nombresMes[Number(mesInput)] || mesInput}</p>
         </div>`;
 
