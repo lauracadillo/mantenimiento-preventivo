@@ -759,7 +759,7 @@ tbody tr:hover {
     color: var(--danger);
     font-weight: 600;
     font-size: 14px;
-    background: var(--danger-dim);
+    /* background: var(--danger-dim); */
     border-radius: 6px;
 }
 
