@@ -206,22 +206,16 @@
 
         <main class="verification-container">
 
-            
-
-            <!-- CARGA DEL PLAN -->
-
-            <div class="upload-grid">
-                <div id="card-plan" class="file-upload-card">
-                    <h3>Plan del mes</h3>
-                    <p>Plan de mantenimiento del mes a verificar. Debe incluir las columnas <strong>Site Id</strong> y <strong>mes a ejecutar</strong>.</p>
-                    <input type="file" id="archivoPlan" accept=".xlsx,.xls,.csv" style="display: none;" onchange="cargarArchivo(event, 'plan', null)">
-                    <label for="archivoPlan" class="boton-subir">
-                        Cargar Archivo
-                    </label>
-                    <div id="estado-plan" class="archivo-estado"></div>
-                </div>
+             <!-- Cargar el plan mensual  -->
+            <div id="card-plan" class="file-upload-card" style="max-width: 360px; padding: 16px; margin-bottom: 16px; border: 1px solid #ccc; border-radius: 8px; background: #fff;">
+                <h3>Plan del mes</h3>
+                <p>Debe incluir las columnas <strong>Site Id</strong> y <strong>mes a ejecutar</strong>.</p>
+                <input type="file" id="archivoPlan" accept=".xlsx,.xls,.csv" style="display: none;" onchange="cargarArchivo(event, 'plan', null)">
+                <label for="archivoPlan" class="boton-subir">Cargar Archivo</label>
+                <div id="estado-plan" class="archivo-estado"></div>
             </div>
 
+            
     
             <!-- FILTROS -->
 
