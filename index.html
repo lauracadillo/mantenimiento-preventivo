@@ -86,6 +86,20 @@
             
 
             <div class="upload-grid">
+
+                <!------------ PLAN DEL MES ------------>
+                <div id="card-plan" class="file-upload-card">
+                    <h3>Plan del mes</h3>
+                    <p>Plan de mantenimiento del mes a verificar. Debe incluir las columnas <strong>Site Id</strong> y <strong>mes a ejecutar</strong>.</p>
+                    <input type="file" id="archivoPlan" accept=".xlsx,.xls,.csv" style="display: none;" onchange="cargarArchivo(event, 'plan', null)">
+                    <label for="archivoPlan" class="boton-subir">
+                        Cargar Archivo
+                    </label>
+                    <div id="estado-plan" class="archivo-estado"></div>
+                </div>
+
+
+
                 <!------------ PREVENTIVO ------------>
                 <div id="card-preventivo" class="file-upload-card">
                     <h3>Mantenimiento Preventivo</h3>

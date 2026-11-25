@@ -1,7 +1,7 @@
 const SUPABASE_URL = 'https://ugayglaqrwccynrikxvp.supabase.co'
 const SUPABASE_ANON_KEY = 'sb_publishable_OjWWKzcoEuR9rwhCQyiRcA_3gsKbRpA'
 
-const TablaPlan2026 = 'Plan2026'
+const TablaPlan2026 = 'Plan2026' // Solo se usa para el INSERT del módulo de Reprogramación
 const TablaSIOM = "SIOM"
 const TablaBaseSitios = "Base de Sitios"
 
@@ -20,18 +20,20 @@ const ColumnasBaseSitios = {
 let sitioPendienteReprogramacion = null;
 
 
+// DatosPlan2026 ahora se llena desde el archivo "plan" cargado manualmente
 let DatosPlan2026 = []
 let DatosSIOM =[]
 let DatosBaseSitios =[]
 let DatosMostrados =[]
 
-let datosArchivos = { correctivo: [], preventivo: [], swap:[], blacklist:[]};
+let datosArchivos = { correctivo: [], preventivo: [], swap:[], blacklist:[], plan:[] };
 
 let estadoArchivos = {
     correctivo: {estado: 'pendiente', nombre: '', filas: 0},
     preventivo: {estado: 'pendiente', nombre: '', filas: 0},
     swap: {estado: 'pendiente', nombre: '', filas: 0}, 
-    blacklist: {estado: 'pendiente', nombre: '', filas: 0} 
+    blacklist: {estado: 'pendiente', nombre: '', filas: 0},
+    plan: {estado: 'pendiente', nombre: '', filas: 0}
 };
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
@@ -74,42 +76,23 @@ async function cargarDatos() {
     try {
         console.log('URL:', SUPABASE_URL);
 
-        const [plan2026,  SIOM, BaseSitios] = await Promise.all([
-            cargarTablaSupabase(TablaPlan2026),
+        // El plan ya NO se carga de Supabase: se carga manualmente como archivo
+        const [SIOM, BaseSitios] = await Promise.all([
             cargarTablaSupabase(TablaSIOM),
             cargarTablaSupabase(TablaBaseSitios)
         ]);
 
-        DatosPlan2026 = plan2026;
         DatosSIOM = SIOM;
         DatosBaseSitios = BaseSitios;
 
-        if (DatosPlan2026.length === 0) {
-            document.getElementById('error').innerHTML =
-                `<div class="error">
-                    No hay datos en la tabla "${TablaPlan2026}"<br>
-                    Verifica:<br>
-                    1. El nombre de la tabla es correcto<br>
-                    2. La tabla tiene datos<br>
-                    3. Row Level Security permite lectura
-                </div>`;
-
-            document.getElementById('loading').style.display = 'none';
-            return;
-        }
-
-        asignarColumnasEjecucion();
-        
-        mostrarTabla(DatosPlan2026);
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('tabla').style.display = 'none';
+        document.getElementById('error').innerHTML = '';
 
         const contador = document.getElementById('contadorFilas');
         if (contador) {
-            contador.textContent = `Mostrando ${DatosPlan2026.length} filas`;
+            contador.textContent = 'Carga el archivo del plan para comenzar';
         }
-
-        // console.log(`Plan2026: ${DatosPlan2026.length} filas`);
-        // console.log(`SIOM: ${DatosSIOM.length} filas`);
-        // console.log(`SIOM: ${DatosSIOM.length} filas`);
 
     } catch (err) {
         console.error('Error completo:', err);
@@ -190,6 +173,14 @@ function mostrarTabla(datos) {
 }
 
 function aplicarFiltro() {
+    // El plan se carga manualmente: sin archivo no hay nada que filtrar
+    if (DatosPlan2026.length === 0) {
+        document.getElementById('tabla').style.display = 'none';
+        document.getElementById('error').innerHTML =
+            `<div class="error">Primero carga el archivo del plan.</div>`;
+        return;
+    }
+
     const mesFiltro = document.getElementById('filtroMes').value;
     const siteIdFiltroRaw = document.getElementById('filtroSiteId').value.trim();
 
@@ -256,6 +247,14 @@ function limpiarFiltro() {
     document.getElementById('filtroMes').value = '';
     document.getElementById('filtroSiteId').value = '';
     document.getElementById('error').innerHTML = '';
+
+    if (DatosPlan2026.length === 0) {
+        document.getElementById('tabla').style.display = 'none';
+        document.getElementById('error').innerHTML =
+            `<div class="error">Primero carga el archivo del plan.</div>`;
+        return;
+    }
+
     asignarColumnasEjecucion();
     mostrarTabla(DatosPlan2026);
     document.getElementById('contadorFilas').textContent =
@@ -290,6 +289,7 @@ function descargarDatosMostrados() {
 
 
 // Funcion para cargar archivos externos 
+// nombreHoja = null -> se usa la primera hoja del Excel (caso del plan)
 function cargarArchivo(event, nombreArchivo, nombreHoja) {
 
     const archivo = event.target.files[0];
@@ -358,17 +358,20 @@ function cargarArchivo(event, nombreArchivo, nombreHoja) {
                         }
                     );
 
+                // Si no se indica hoja (plan), se usa la primera
+                const nombreHojaUsar = nombreHoja || workbook.SheetNames[0];
+
                 if (
-                    !workbook.SheetNames.includes(nombreHoja)
+                    !workbook.SheetNames.includes(nombreHojaUsar)
                 ) {
 
                     throw new Error(
-                        `La hoja "${nombreHoja}" no existe. ` +
+                        `La hoja "${nombreHojaUsar}" no existe. ` +
                         `Hojas disponibles: ` +
                         `${workbook.SheetNames.join(', ')}`
                     );
                 }
-                const hoja = workbook.Sheets[nombreHoja];
+                const hoja = workbook.Sheets[nombreHojaUsar];
 
                 datos =
                     XLSX.utils.sheet_to_json(
@@ -379,6 +382,31 @@ function cargarArchivo(event, nombreArchivo, nombreHoja) {
                     );
             }
 
+            // ==========================================
+            // VALIDACIÓN Y NORMALIZACIÓN DEL PLAN
+            // ==========================================
+            if (nombreArchivo === 'plan') {
+                // Quitar espacios en los nombres de columnas
+                datos = datos.map(fila => {
+                    const nueva = {};
+                    Object.keys(fila).forEach(k => { nueva[k.trim()] = fila[k]; });
+                    return nueva;
+                });
+
+                const requeridas = [COLUMNA_SITE_ID, COLUMNA_MES];
+                const columnas = datos.length ? Object.keys(datos[0]) : [];
+                const faltantes = requeridas.filter(c => !columnas.includes(c));
+
+                if (datos.length === 0) {
+                    throw new Error('El archivo del plan está vacío.');
+                }
+                if (faltantes.length) {
+                    throw new Error(`Faltan columnas en el plan: ${faltantes.join(', ')}`);
+                }
+
+                DatosPlan2026 = datos;
+            }
+
             datosArchivos[nombreArchivo] = datos;
 
             estadoArchivos[nombreArchivo].estado = 'cargado';
@@ -387,9 +415,8 @@ function cargarArchivo(event, nombreArchivo, nombreHoja) {
 
             actualizarEstadoArchivos();
 
-            // RE-RENDERIZAR LA TABLA SI HAY FILTRO APLICADO
-            const mesFiltro = document.getElementById('filtroMes').value;
-            if (mesFiltro) {
+            // RE-RENDERIZAR LA TABLA si ya hay un plan cargado (con o sin filtros)
+            if (DatosPlan2026.length > 0) {
                 aplicarFiltro();
             }
 
@@ -412,6 +439,11 @@ function cargarArchivo(event, nombreArchivo, nombreHoja) {
             estadoArchivos[nombreArchivo].filas = 0;
 
             actualizarEstadoArchivos();
+
+            if (nombreArchivo === 'plan') {
+                document.getElementById('error').innerHTML =
+                    `<div class="error">${error.message}</div>`;
+            }
         }
     };
 
@@ -439,6 +471,9 @@ function actualizarEstadoArchivos() {
     Object.entries(estadoArchivos).forEach(([nombre, info]) => {
         const estado = document.getElementById(`estado-${nombre}`);
         const card = document.getElementById(`card-${nombre}`);
+
+        // Si la tarjeta no existe en el HTML, se omite
+        if (!estado || !card) return;
         
         // Limpiar clases previas
         card.classList.remove('pendiente', 'cargando', 'cargado', 'error');
@@ -1041,7 +1076,7 @@ function buscarSitioEnBaseSitios(siteId) {
 
 function buscarSitioEnPlan(siteId) {
     /**
-     * Busca el Site Id en Plan2026 (ya cargado en DatosPlan2026) para obtener
+     * Busca el Site Id en el plan cargado (DatosPlan2026) para obtener
      * TipoN y Frecuencia. Si el sitio aparece varias filas, usa la primera
      * que tenga Frecuencia definida.
      */
@@ -1211,6 +1246,7 @@ async function confirmarReprogramacion() {
     /**
      * Paso 2 del flujo: el usuario aceptó el resumen mostrado.
      * Inserta la nueva fila en la tabla Plan2026 en Supabase.
+     * (El plan cargado manualmente en Verificación mensual NO se toca.)
      */
 
     if (!sitioPendienteReprogramacion) return;
@@ -1231,10 +1267,6 @@ async function confirmarReprogramacion() {
             `<div class="estado-cargado">✅ Sitio agregado correctamente a Plan2026.</div>`;
         confirmacionDiv.classList.add('hidden');
         sitioPendienteReprogramacion = null;
-
-        // Refrescar el plan en memoria para que quede reflejado en Verificación mensual
-        DatosPlan2026 = await cargarTablaSupabase(TablaPlan2026);
-        asignarColumnasEjecucion();
 
     } catch (err) {
         console.error('Error al reprogramar:', err);
@@ -1312,6 +1344,12 @@ async function cerrarSesion() {
     DatosBaseSitios = [];
     DatosMostrados = [];
     sitioPendienteReprogramacion = null;
+
+    // Limpiar también el plan cargado manualmente
+    datosArchivos.plan = [];
+    estadoArchivos.plan = {estado: 'pendiente', nombre: '', filas: 0};
+    actualizarEstadoArchivos();
+    document.getElementById('tabla').style.display = 'none';
 
     mostrarPagina("loginPage");
 }
